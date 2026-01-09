@@ -12,9 +12,10 @@ interface Member {
 }
 
 interface Obligation {
-    name: string;
+    subcollection?: string;
+    name?: string;
     amount: number | string;
-    status: string;
+    status?: string;
     date?: string;
     [key: string]: any;
 }
@@ -149,7 +150,7 @@ export default function MyFamilyPage() {
                             <table className="min-w-full divide-y divide-gray-200">
                                 <thead className="bg-gray-50">
                                     <tr>
-                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
+                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subcollection / Title</th>
                                         <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
                                         <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                                     </tr>
@@ -157,12 +158,12 @@ export default function MyFamilyPage() {
                                 <tbody className="bg-white divide-y divide-gray-200">
                                     {obligations.map((obl, idx) => (
                                         <tr key={idx} className="hover:bg-gray-50 transition-colors">
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{obl.name || "Payment"}</td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">₹{obl.amount}</td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{obl.subcollection || obl.name || "Pending Payment"}</td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-700">₹{obl.amount}</td>
                                             <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
-                                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${(obl.status || '').toLowerCase() === 'paid'
-                                                        ? 'bg-green-100 text-green-800'
-                                                        : 'bg-yellow-100 text-yellow-800'
+                                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${(obl.status || 'pending').toLowerCase() === 'paid'
+                                                    ? 'bg-green-100 text-green-800'
+                                                    : 'bg-yellow-100 text-yellow-800'
                                                     }`}>
                                                     {obl.status || "Pending"}
                                                 </span>
