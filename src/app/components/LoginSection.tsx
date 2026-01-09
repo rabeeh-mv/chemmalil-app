@@ -66,7 +66,7 @@ export default function LoginSection() {
       console.log("Login successful:", unitData);
 
       // Navigate to dashboard
-      router.push("/dashboard");
+      router.push("/myfamily");
 
     } catch (error) {
       console.error("Login error:", error);
