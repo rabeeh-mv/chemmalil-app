@@ -5,9 +5,9 @@ import { useRouter } from "next/navigation";
 import { db, auth } from "@/app/lib/firebase";
 import { collection, getDocs, doc, updateDoc, deleteDoc } from "firebase/firestore";
 import { onAuthStateChanged, signOut } from "firebase/auth";
-import { 
-  Home, Users, LogOut, Download, FileText, 
-  Sheet, Search, Edit, Trash2, X, Check, ArrowUpDown 
+import {
+  Home, Users, LogOut, Download, FileText,
+  Sheet, Search, Edit, Trash2, X, Check, ArrowUpDown
 } from "lucide-react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -43,6 +43,17 @@ interface FamilyData {
   registrationDate: string;
 }
 
+interface UnitData {
+  id: string; // Document ID (usually House ID)
+  houseId: string;
+  houseName: string;
+  guardianName: string;
+  guardianDob: string;
+  guardianAadhaarLast4: string;
+  members: { member_id: string; name: string }[];
+  obligations?: { subcollection: string; amount: string | number }[];
+}
+
 export default function AdminDashboard() {
   const router = useRouter();
   const [families, setFamilies] = useState<FamilyData[]>([]);
@@ -53,6 +64,13 @@ export default function AdminDashboard() {
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [editingFamily, setEditingFamily] = useState<FamilyData | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
+
+  // Units State
+  const [activeTab, setActiveTab] = useState<"families" | "units">("families");
+  const [units, setUnits] = useState<UnitData[]>([]);
+  const [filteredUnits, setFilteredUnits] = useState<UnitData[]>([]);
+  const [unitsLoading, setUnitsLoading] = useState(true);
+  const [unitSearchTerm, setUnitSearchTerm] = useState("");
 
   // Auth check
   useEffect(() => {
@@ -67,7 +85,21 @@ export default function AdminDashboard() {
   // Fetch families data
   useEffect(() => {
     fetchFamilies();
+    fetchUnits();
   }, []);
+
+  // Filter Units
+  useEffect(() => {
+    let filtered = units.filter((unit) => {
+      const searchLower = unitSearchTerm.toLowerCase();
+      return (
+        (unit.houseName || "").toLowerCase().includes(searchLower) ||
+        (unit.guardianName || "").toLowerCase().includes(searchLower) ||
+        (unit.houseId || "").toLowerCase().includes(searchLower)
+      );
+    });
+    setFilteredUnits(filtered);
+  }, [unitSearchTerm, units]);
 
   // Filter and sort
   useEffect(() => {
@@ -111,6 +143,22 @@ export default function AdminDashboard() {
       toast.error("Failed to load families data");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchUnits = async () => {
+    try {
+      const querySnapshot = await getDocs(collection(db, "units"));
+      const data: UnitData[] = [];
+      querySnapshot.forEach((doc) => {
+        data.push({ id: doc.id, ...doc.data() } as UnitData);
+      });
+      setUnits(data);
+    } catch (error) {
+      console.error("Error fetching units:", error);
+      toast.error("Failed to load synced units data");
+    } finally {
+      setUnitsLoading(false);
     }
   };
 
@@ -173,12 +221,24 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleDeleteUnit = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this synced unit? This will only remove it from the dashboard, not the desktop app source.")) return;
+    try {
+      await deleteDoc(doc(db, "units", id));
+      toast.success("Unit deleted successfully");
+      fetchUnits();
+    } catch (e) {
+      console.error("Error deleting unit", e);
+      toast.error("Failed to delete unit");
+    }
+  };
+
   const exportToPDF = () => {
     const pdf = new jsPDF();
-    
+
     pdf.setFontSize(18);
     pdf.text("Masjid Family Registration Data", 14, 22);
-    
+
     pdf.setFontSize(11);
     pdf.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 30);
 
@@ -267,172 +327,297 @@ export default function AdminDashboard() {
       </header>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Stats Cards */}
-        <div className="grid md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white rounded-xl p-6 shadow-lg">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600 mb-1">Total Families</p>
-                <p className="text-3xl font-bold text-blue-600">{families.length}</p>
-              </div>
-              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                <Home className="w-6 h-6 text-blue-600" />
-              </div>
-            </div>
-          </div>
 
-          <div className="bg-white rounded-xl p-6 shadow-lg">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600 mb-1">Total Members</p>
-                <p className="text-3xl font-bold text-emerald-600">
-                  {families.reduce((sum, f) => sum + f.totalMembers, 0)}
-                </p>
-              </div>
-              <div className="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center">
-                <Users className="w-6 h-6 text-emerald-600" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl p-6 shadow-lg">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600 mb-1">Average Members/Family</p>
-                <p className="text-3xl font-bold text-purple-600">
-                  {families.length > 0
-                    ? (families.reduce((sum, f) => sum + f.totalMembers, 0) / families.length).toFixed(1)
-                    : 0}
-                </p>
-              </div>
-              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                <Users className="w-6 h-6 text-purple-600" />
-              </div>
-            </div>
-          </div>
+        {/* Tab Navigation */}
+        <div className="flex space-x-1 mb-8 bg-blue-100 p-1 rounded-xl w-fit">
+          <button
+            onClick={() => setActiveTab("families")}
+            className={`px-6 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${activeTab === "families"
+                ? "bg-white text-blue-600 shadow-sm"
+                : "text-blue-600 hover:bg-blue-200"
+              }`}
+          >
+            Web Registrations
+          </button>
+          <button
+            onClick={() => setActiveTab("units")}
+            className={`px-6 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${activeTab === "units"
+                ? "bg-white text-blue-600 shadow-sm"
+                : "text-blue-600 hover:bg-blue-200"
+              }`}
+          >
+            Synced Units
+          </button>
         </div>
 
-        {/* Controls */}
-        <div className="bg-white rounded-xl p-6 shadow-lg mb-6">
-          <div className="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center">
-            {/* Search */}
-            <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search families..."
-                className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
+        {activeTab === "families" ? (
+          <>
+            {/* Stats Cards */}
+            <div className="grid md:grid-cols-3 gap-6 mb-8">
+              <div className="bg-white rounded-xl p-6 shadow-lg">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-600 mb-1">Total Families</p>
+                    <p className="text-3xl font-bold text-blue-600">{families.length}</p>
+                  </div>
+                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <Home className="w-6 h-6 text-blue-600" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-xl p-6 shadow-lg">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-600 mb-1">Total Members</p>
+                    <p className="text-3xl font-bold text-emerald-600">
+                      {families.reduce((sum, f) => sum + f.totalMembers, 0)}
+                    </p>
+                  </div>
+                  <div className="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center">
+                    <Users className="w-6 h-6 text-emerald-600" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-xl p-6 shadow-lg">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-600 mb-1">Average Members/Family</p>
+                    <p className="text-3xl font-bold text-purple-600">
+                      {families.length > 0
+                        ? (families.reduce((sum, f) => sum + f.totalMembers, 0) / families.length).toFixed(1)
+                        : 0}
+                    </p>
+                  </div>
+                  <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                    <Users className="w-6 h-6 text-purple-600" />
+                  </div>
+                </div>
+              </div>
             </div>
 
-            {/* Export Buttons */}
-            <div className="flex gap-3">
-              <button
-                onClick={exportToPDF}
-                className="flex items-center gap-2 px-4 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
-              >
-                <FileText className="w-4 h-4" />
-                Export PDF
-              </button>
-              <button
-                onClick={exportToExcel}
-                className="flex items-center gap-2 px-4 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition"
-              >
-                <Sheet className="w-4 h-4" />
-                Export Excel
-              </button>
-            </div>
-          </div>
-        </div>
+            {/* Controls */}
+            <div className="bg-white rounded-xl p-6 shadow-lg mb-6">
+              <div className="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center">
+                {/* Search */}
+                <div className="relative flex-1 max-w-md">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Search families..."
+                    className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                </div>
 
-        {/* Data Table */}
-        <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
-                <tr>
-                  <th className="px-6 py-4 text-left">
-                    <button
-                      onClick={() => handleSort("familyName")}
-                      className="flex items-center gap-2 hover:text-blue-200 transition"
-                    >
-                      Family Name
-                      <ArrowUpDown className="w-4 h-4" />
-                    </button>
-                  </th>
-                  <th className="px-6 py-4 text-left">House Name</th>
-                  <th className="px-6 py-4 text-left">
-                    <button
-                      onClick={() => handleSort("location")}
-                      className="flex items-center gap-2 hover:text-blue-200 transition"
-                    >
-                      Location
-                      <ArrowUpDown className="w-4 h-4" />
-                    </button>
-                  </th>
-                  <th className="px-6 py-4 text-left">Members</th>
-                  <th className="px-6 py-4 text-left">Contact Person</th>
-                  <th className="px-6 py-4 text-left">Phone</th>
-                  <th className="px-6 py-4 text-left">
-                    <button
-                      onClick={() => handleSort("createdAt")}
-                      className="flex items-center gap-2 hover:text-blue-200 transition"
-                    >
-                      Reg. Date
-                      <ArrowUpDown className="w-4 h-4" />
-                    </button>
-                  </th>
-                  <th className="px-6 py-4 text-center">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {filteredFamilies.length === 0 ? (
-                  <tr>
-                    <td colSpan={8} className="px-6 py-12 text-center text-gray-500">
-                      No families found
-                    </td>
-                  </tr>
-                ) : (
-                  filteredFamilies.map((family) => (
-                    <tr key={family.id} className="hover:bg-gray-50 transition">
-                      <td className="px-6 py-4 font-medium text-gray-900">{family.familyName}</td>
-                      <td className="px-6 py-4 text-gray-600">{family.houseName}</td>
-                      <td className="px-6 py-4 text-gray-600">{family.location}</td>
-                      <td className="px-6 py-4">
-                        <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
-                          {family.totalMembers}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-gray-600">{family.primaryMember.name}</td>
-                      <td className="px-6 py-4 text-gray-600">{family.primaryMember.phone}</td>
-                      <td className="px-6 py-4 text-gray-600">{family.registrationDate}</td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center justify-center gap-2">
-                          <button
-                            onClick={() => handleEdit(family)}
-                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition"
-                            title="Edit"
-                          >
-                            <Edit className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => handleDelete(family.id, family.familyName)}
-                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition"
-                            title="Delete"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </td>
+                {/* Export Buttons */}
+                <div className="flex gap-3">
+                  <button
+                    onClick={exportToPDF}
+                    className="flex items-center gap-2 px-4 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
+                  >
+                    <FileText className="w-4 h-4" />
+                    Export PDF
+                  </button>
+                  <button
+                    onClick={exportToExcel}
+                    className="flex items-center gap-2 px-4 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition"
+                  >
+                    <Sheet className="w-4 h-4" />
+                    Export Excel
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Data Table */}
+            <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
+                    <tr>
+                      <th className="px-6 py-4 text-left">
+                        <button
+                          onClick={() => handleSort("familyName")}
+                          className="flex items-center gap-2 hover:text-blue-200 transition"
+                        >
+                          Family Name
+                          <ArrowUpDown className="w-4 h-4" />
+                        </button>
+                      </th>
+                      <th className="px-6 py-4 text-left">House Name</th>
+                      <th className="px-6 py-4 text-left">
+                        <button
+                          onClick={() => handleSort("location")}
+                          className="flex items-center gap-2 hover:text-blue-200 transition"
+                        >
+                          Location
+                          <ArrowUpDown className="w-4 h-4" />
+                        </button>
+                      </th>
+                      <th className="px-6 py-4 text-left">Members</th>
+                      <th className="px-6 py-4 text-left">Contact Person</th>
+                      <th className="px-6 py-4 text-left">Phone</th>
+                      <th className="px-6 py-4 text-left">
+                        <button
+                          onClick={() => handleSort("createdAt")}
+                          className="flex items-center gap-2 hover:text-blue-200 transition"
+                        >
+                          Reg. Date
+                          <ArrowUpDown className="w-4 h-4" />
+                        </button>
+                      </th>
+                      <th className="px-6 py-4 text-center">Actions</th>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {filteredFamilies.length === 0 ? (
+                      <tr>
+                        <td colSpan={8} className="px-6 py-12 text-center text-gray-500">
+                          No families found
+                        </td>
+                      </tr>
+                    ) : (
+                      filteredFamilies.map((family) => (
+                        <tr key={family.id} className="hover:bg-gray-50 transition">
+                          <td className="px-6 py-4 font-medium text-gray-900">{family.familyName}</td>
+                          <td className="px-6 py-4 text-gray-600">{family.houseName}</td>
+                          <td className="px-6 py-4 text-gray-600">{family.location}</td>
+                          <td className="px-6 py-4">
+                            <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
+                              {family.totalMembers}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 text-gray-600">{family.primaryMember.name}</td>
+                          <td className="px-6 py-4 text-gray-600">{family.primaryMember.phone}</td>
+                          <td className="px-6 py-4 text-gray-600">{family.registrationDate}</td>
+                          <td className="px-6 py-4">
+                            <div className="flex items-center justify-center gap-2">
+                              <button
+                                onClick={() => handleEdit(family)}
+                                className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition"
+                                title="Edit"
+                              >
+                                <Edit className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => handleDelete(family.id, family.familyName)}
+                                className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition"
+                                title="Delete"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </>
+        ) : (
+          <>
+            {/* Units View */}
+            <div className="grid md:grid-cols-3 gap-6 mb-8">
+              <div className="bg-white rounded-xl p-6 shadow-lg">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-600 mb-1">Total Synced Units</p>
+                    <p className="text-3xl font-bold text-indigo-600">{units.length}</p>
+                  </div>
+                  <div className="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center">
+                    <Home className="w-6 h-6 text-indigo-600" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Controls */}
+            <div className="bg-white rounded-xl p-6 shadow-lg mb-6">
+              <div className="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center">
+                <div className="relative flex-1 max-w-md">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Search units..."
+                    className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
+                    value={unitSearchTerm}
+                    onChange={(e) => setUnitSearchTerm(e.target.value)}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Units Table */}
+            <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white">
+                    <tr>
+                      <th className="px-6 py-4 text-left">House ID</th>
+                      <th className="px-6 py-4 text-left">House Name</th>
+                      <th className="px-6 py-4 text-left">Guardian</th>
+                      <th className="px-6 py-4 text-left">Members</th>
+                      <th className="px-6 py-4 text-left">Obligations (Pending)</th>
+                      <th className="px-6 py-4 text-center">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {filteredUnits.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
+                          No units found
+                        </td>
+                      </tr>
+                    ) : (
+                      filteredUnits.map((unit) => (
+                        <tr key={unit.id} className="hover:bg-gray-50 transition">
+                          <td className="px-6 py-4 font-medium text-gray-900">{unit.houseId || unit.id}</td>
+                          <td className="px-6 py-4 text-gray-600">{unit.houseName}</td>
+                          <td className="px-6 py-4 text-gray-600">
+                            <div>{unit.guardianName}</div>
+                            <div className="text-xs text-gray-400">DOB: {unit.guardianDob || 'N/A'}</div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <span className="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-sm font-medium">
+                              {unit.members ? unit.members.length : 0}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4">
+                            {unit.obligations && unit.obligations.length > 0 ? (
+                              <span className="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full text-sm font-medium">
+                                {unit.obligations.length} Pending
+                              </span>
+                            ) : (
+                              <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">
+                                Clear
+                              </span>
+                            )}
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="flex items-center justify-center gap-2">
+                              <button
+                                onClick={() => handleDeleteUnit(unit.id)}
+                                className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition"
+                                title="Delete"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Edit Modal */}
