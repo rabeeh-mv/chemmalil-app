@@ -5,15 +5,14 @@ import { getStorage } from 'firebase/storage';
 import { getAuth } from 'firebase/auth';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDNn-n3VWZ4tO9U76APjaXu2eqdylYFKJ0",
-  authDomain: "chemmalil-app.firebaseapp.com",
-  projectId: "chemmalil-app",
-  storageBucket: "chemmalil-app.firebasestorage.app",
-  messagingSenderId: "1067760207221",
-  appId: "1:1067760207221:web:4062e3eef4c1751d207f3c",
-  measurementId: "G-RJTPJCQS7P"
+  apiKey: "AIzaSyALi_65ABX4PWDPiMsm10jqC8rNP1RQ7vI",
+  authDomain: "cahmmal.firebaseapp.com",
+  projectId: "cahmmal",
+  storageBucket: "cahmmal.firebasestorage.app",
+  messagingSenderId: "1021975684270",
+  appId: "1:1021975684270:web:c606258d0f4c74c848793f",
+  measurementId: "G-6VWJEDM1V3"
 };
-
 const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);
 export const storage = getStorage(app);

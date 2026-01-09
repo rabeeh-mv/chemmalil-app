@@ -8,7 +8,7 @@ import { User, Home, LogIn } from "lucide-react";
 
 export default function LoginSection() {
   const router = useRouter();
-  const [houseNumber, setHouseNumber] = useState("");
+  const [aadhaarLast4, setAadhaarLast4] = useState("");
   const [dob, setDob] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -16,42 +16,55 @@ export default function LoginSection() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    
-    if (!houseNumber || !dob) {
-      setError("Please fill all fields");
+
+    // Aadhaar Last 4 validation
+    if (!aadhaarLast4 || aadhaarLast4.length !== 4 || isNaN(Number(aadhaarLast4))) {
+      setError("Please enter the last 4 digits of Aadhaar");
+      return;
+    }
+
+    if (!dob) {
+      setError("Please enter your Date of Birth");
       return;
     }
 
     setLoading(true);
 
     try {
-      // Query Firestore for matching credentials
+      // Query Firestore 'units' collection (official data)
+      // Matches: guardianAadhaarLast4 == input AND guardianDob == input
+      // Note: This requires a composite index if asking for both equality at once.
+      // Or we can filter client side if volume is low, but let's try strict query.
+      // Firestore allows equality on multiple fields without composite index usually? 
+      // Actually strictly equality on multiple fields works fine without index for small datasets or usually auto-indexed?
+      // No, multiple equality is fine. It's equality + range that needs index.
+
       const q = query(
-        collection(db, "families"),
-        where("houseNumber", "==", houseNumber),
-        where("primaryMember.dob", "==", dob)
+        collection(db, "units"),
+        where("guardianAadhaarLast4", "==", aadhaarLast4),
+        where("guardianDob", "==", dob)
       );
 
       const querySnapshot = await getDocs(q);
 
       if (querySnapshot.empty) {
-        setError("Invalid credentials! Please check your House Number and Date of Birth.");
+        setError("Invalid credentials! No matching record found.");
         setLoading(false);
         return;
       }
 
-      // Login successful - get family data
-      const familyDoc = querySnapshot.docs[0];
-      const familyData = { id: familyDoc.id, ...familyDoc.data() };
+      // Login successful
+      const unitDoc = querySnapshot.docs[0];
+      const unitData = { id: unitDoc.id, ...unitDoc.data() };
 
       // Store in sessionStorage
       if (typeof window !== "undefined") {
-        sessionStorage.setItem("familyData", JSON.stringify(familyData));
+        sessionStorage.setItem("familyData", JSON.stringify(unitData));
         sessionStorage.setItem("isLoggedIn", "true");
       }
 
-      console.log("Login successful:", familyData);
-      
+      console.log("Login successful:", unitData);
+
       // Navigate to dashboard
       router.push("/dashboard");
 
@@ -83,21 +96,22 @@ export default function LoginSection() {
         <form onSubmit={handleLogin} className="space-y-5">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              House Number *
+              Aadhaar - Last 4 Digits *
             </label>
             <input
               type="text"
-              value={houseNumber}
-              onChange={(e) => setHouseNumber(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition"
-              placeholder="Enter your house number"
+              value={aadhaarLast4}
+              onChange={(e) => setAadhaarLast4(e.target.value.replace(/\D/g, "").slice(0, 4))}
+              maxLength={4}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition text-center tracking-widest text-lg"
+              placeholder="XXXX"
               required
             />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Date of Birth *
+              Guardian Date of Birth *
             </label>
             <input
               type="date"
@@ -107,7 +121,7 @@ export default function LoginSection() {
               required
             />
             <p className="text-xs text-gray-500 mt-1">
-              Enter the date of birth of the primary member
+              Enter the date of birth of the Guardian
             </p>
           </div>
 
