@@ -368,27 +368,27 @@ export default function RegistrationSection() {
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700">House Name *</label>
-                  <input type="text" className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+                  <input type="text" className="w-full text-gray-900 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
                     value={houseName} onChange={(e) => setHouseName(e.target.value)} placeholder="e.g., Al-Noor" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Family Name *</label>
-                  <input type="text" className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+                  <input type="text" className="w-full text-gray-900 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
                     value={familyName} onChange={(e) => setFamilyName(e.target.value)} placeholder="e.g., Rahman Family" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Location *</label>
-                  <input type="text" className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+                  <input type="text" className="w-full text-gray-900 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
                     value={location} onChange={(e) => setLocation(e.target.value)} />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Road Name *</label>
-                  <input type="text" className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+                  <input type="text" className="w-full text-gray-900 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
                     value={roadName} onChange={(e) => setRoadName(e.target.value)} />
                 </div>
                 <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-gray-700">Detailed Address *</label>
-                  <textarea rows={3} className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none resize-none"
+                  <textarea rows={3} className="w-full text-gray-900 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none resize-none"
                     value={address} onChange={(e) => setAddress(e.target.value)} />
                 </div>
               </div>
@@ -406,7 +406,7 @@ export default function RegistrationSection() {
               </h2>
 
               {/* Photo Upload */}
-              <div className="flex flex-col items-center justify-center p-4 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 mb-4">
+              {/* <div className="flex flex-col items-center justify-center p-4 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 mb-4">
                 {guardianPhotoPreview ? (
                   <div className="relative">
                     <img src={guardianPhotoPreview} alt="Preview" className="w-32 h-32 object-cover rounded-full border-4 border-white shadow-md" />
@@ -424,68 +424,68 @@ export default function RegistrationSection() {
                     </label>
                   </div>
                 )}
-              </div>
+              </div> */}
 
               {/* Personal Details */}
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Full Name *</label>
-                  <input type="text" className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+                  <input type="text" className="w-full text-gray-900 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
                     value={guardian.fullName} onChange={(e) => updateGuardian("fullName", e.target.value)} />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Surname *</label>
-                  <input type="text" className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+                  <input type="text" className="w-full text-gray-900 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
                     value={guardian.surname} onChange={(e) => updateGuardian("surname", e.target.value)} />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Father Name *</label>
-                  <input type="text" className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+                  <input type="text" className="w-full text-gray-900 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
                     value={guardian.fatherName} onChange={(e) => updateGuardian("fatherName", e.target.value)} />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Father Surname *</label>
-                  <input type="text" className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+                  <input type="text" className="w-full text-gray-900 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
                     value={guardian.fatherSurname} onChange={(e) => updateGuardian("fatherSurname", e.target.value)} />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Mother Name *</label>
-                  <input type="text" className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+                  <input type="text" className="w-full text-gray-900 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
                     value={guardian.motherName} onChange={(e) => updateGuardian("motherName", e.target.value)} />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Mother Surname *</label>
-                  <input type="text" className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+                  <input type="text" className="w-full text-gray-900 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
                     value={guardian.motherSurname} onChange={(e) => updateGuardian("motherSurname", e.target.value)} />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Wife Name</label>
-                  <input type="text" className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+                  <input type="text" className="w-full text-gray-900 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
                     value={guardian.wifeName} onChange={(e) => updateGuardian("wifeName", e.target.value)} />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Wife Surname</label>
-                  <input type="text" className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+                  <input type="text" className="w-full text-gray-900 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
                     value={guardian.wifeSurname} onChange={(e) => updateGuardian("wifeSurname", e.target.value)} />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Date of Birth *</label>
-                  <input type="date" className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+                  <input type="date" className="w-full text-gray-900 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
                     value={guardian.dob} onChange={(e) => updateGuardian("dob", e.target.value)} />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Aadhaar (Last 4 Digits) *</label>
-                  <input type="text" maxLength={4} className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+                  <input type="text" maxLength={4} className="w-full text-gray-900 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
                     value={guardian.aadhaar} onChange={(e) => updateGuardian("aadhaar", e.target.value.replace(/\D/g, ""))} placeholder="XXXX" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Phone Number *</label>
-                  <input type="tel" maxLength={10} className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+                  <input type="tel" maxLength={10} className="w-full text-gray-900 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
                     value={guardian.phone} onChange={(e) => updateGuardian("phone", e.target.value.replace(/\D/g, ""))} />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">WhatsApp Number *</label>
-                  <input type="tel" maxLength={10} className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+                  <input type="tel" maxLength={10} className="w-full text-gray-900 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
                     value={guardian.whatsapp} onChange={(e) => updateGuardian("whatsapp", e.target.value.replace(/\D/g, ""))} />
                 </div>
               </div>
@@ -550,10 +550,10 @@ export default function RegistrationSection() {
                   <h3 className="font-semibold text-gray-700">House Details</h3>
                   <button onClick={() => setStep(1)} className="text-emerald-600 text-sm">Edit</button>
                 </div>
-                <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-md">
-                  <p><span className="text-gray-500 text-sm block">House Name</span>{houseName}</p>
-                  <p><span className="text-gray-500 text-sm block">Family Name</span>{familyName}</p>
-                  <p className="col-span-2"><span className="text-gray-500 text-sm block">Address</span>{address}, {roadName}, {location}</p>
+                <div className="grid grid-cols-2 text-gray-800 gap-x-4 gap-y-2 text-md">
+                  <p><span className="text-gray-700 text-sm block">House Name</span>{houseName}</p>
+                  <p><span className="text-gray-700 text-sm block">Family Name</span>{familyName}</p>
+                  <p className="col-span-2"><span className="text-gray-700 text-sm block">Address</span>{address}, {roadName}, {location}</p>
                 </div>
               </div>
 
@@ -563,12 +563,12 @@ export default function RegistrationSection() {
                   <h3 className="font-semibold text-gray-700">Guardian Details</h3>
                   <button onClick={() => setStep(2)} className="text-emerald-600 text-sm">Edit</button>
                 </div>
-                <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-md">
-                  <p><span className="text-gray-500 text-sm block">Name</span>{guardian.fullName} {guardian.surname}</p>
-                  <p><span className="text-gray-500 text-sm block">Phone</span>{guardian.phone}</p>
-                  <p><span className="text-gray-500 text-sm block">Father</span>{guardian.fatherName} {guardian.fatherSurname}</p>
-                  <p><span className="text-gray-500 text-sm block">Mother</span>{guardian.motherName} {guardian.motherSurname}</p>
-                  {guardian.wifeName && <p className="col-span-2"><span className="text-gray-500 text-sm block">Wife</span>{guardian.wifeName} {guardian.wifeSurname}</p>}
+                <div className="grid grid-cols-2 text-gray-800 gap-x-4 gap-y-2 text-md">
+                  <p><span className="text-gray-700 text-sm block">Name</span>{guardian.fullName} {guardian.surname}</p>
+                  <p><span className="text-gray-700 text-sm block">Phone</span>{guardian.phone}</p>
+                  <p><span className="text-gray-700 text-sm block">Father</span>{guardian.fatherName} {guardian.fatherSurname}</p>
+                  <p><span className="text-gray-700 text-sm block">Mother</span>{guardian.motherName} {guardian.motherSurname}</p>
+                  {guardian.wifeName && <p className="col-span-2"><span className="text-gray-700 text-sm block">Wife</span>{guardian.wifeName} {guardian.wifeSurname}</p>}
                 </div>
               </div>
 
@@ -612,33 +612,33 @@ export default function RegistrationSection() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-xs font-medium text-gray-500">Full Name *</label>
-                  <input className="w-full p-2 border rounded" value={modalFullName} onChange={(e) => setModalFullName(e.target.value)} />
+                  <input className="w-full text-gray-900 p-2 border rounded" value={modalFullName} onChange={(e) => setModalFullName(e.target.value)} />
                 </div>
                 <div>
                   <label className="text-xs font-medium text-gray-500">Surname *</label>
-                  <input className="w-full p-2 border rounded" value={modalSurname} onChange={(e) => setModalSurname(e.target.value)} />
+                  <input className="w-full text-gray-900 p-2 border rounded" value={modalSurname} onChange={(e) => setModalSurname(e.target.value)} />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-xs font-medium text-gray-500">Father Name *</label>
-                  <input className="w-full p-2 border rounded" list="guardian-suggestions" value={modalFatherName} onChange={(e) => setModalFatherName(e.target.value)} />
+                  <input className="w-full text-gray-900 p-2 border rounded" list="guardian-suggestions" value={modalFatherName} onChange={(e) => setModalFatherName(e.target.value)} />
                 </div>
                 <div>
                   <label className="text-xs font-medium text-gray-500">Father Surname *</label>
-                  <input className="w-full p-2 border rounded" list="guardian-surname-suggestions" value={modalFatherSurname} onChange={(e) => setModalFatherSurname(e.target.value)} />
+                  <input className="w-full text-gray-900 p-2 border rounded" list="guardian-surname-suggestions" value={modalFatherSurname} onChange={(e) => setModalFatherSurname(e.target.value)} />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-xs font-medium text-gray-500">Mother Name *</label>
-                  <input className="w-full p-2 border rounded" list="guardian-mother-suggestions" value={modalMotherName} onChange={(e) => setModalMotherName(e.target.value)} />
+                  <input className="w-full text-gray-900 p-2 border rounded" list="guardian-mother-suggestions" value={modalMotherName} onChange={(e) => setModalMotherName(e.target.value)} />
                 </div>
                 <div>
                   <label className="text-xs font-medium text-gray-500">Mother Surname *</label>
-                  <input className="w-full p-2 border rounded" list="guardian-mother-surname-suggestions" value={modalMotherSurname} onChange={(e) => setModalMotherSurname(e.target.value)} />
+                  <input className="w-full text-gray-900 p-2 border rounded" list="guardian-mother-surname-suggestions" value={modalMotherSurname} onChange={(e) => setModalMotherSurname(e.target.value)} />
                 </div>
               </div>
 
