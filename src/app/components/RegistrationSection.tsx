@@ -153,8 +153,8 @@ export default function RegistrationSection() {
       motherSurname: modalMotherSurname,
       dob: modalDob,
       isMarried: modalIsMarried,
-      spouseName: modalIsMarried ? modalSpouseName : undefined,
-      spouseSurname: modalIsMarried ? modalSpouseSurname : undefined,
+      spouseName: modalIsMarried ? modalSpouseName : "",
+      spouseSurname: modalIsMarried ? modalSpouseSurname : "",
     };
 
     if (editingMemberIndex !== null) {
@@ -325,7 +325,10 @@ export default function RegistrationSection() {
         registrationDate: new Date().toLocaleDateString(),
       };
 
-      const docRef = await addDoc(collection(db, "families"), data);
+      // Sanitize data to remove any undefined values which Firestore rejects
+      const sanitizedData = JSON.parse(JSON.stringify(data));
+
+      const docRef = await addDoc(collection(db, "families"), sanitizedData);
       console.log("Saved with ID:", docRef.id);
       setShowSuccessPopup(true);
     } catch (error) {
