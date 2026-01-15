@@ -21,6 +21,7 @@ interface Member {
   isMarried: boolean;
   spouseName?: string;
   spouseSurname?: string;
+  relation?: string;
 }
 
 interface GuardianDetails {
@@ -81,6 +82,7 @@ export default function RegistrationSection() {
   const [members, setMembers] = useState<Member[]>([]);
 
   // Modal form fields (Member)
+  const [modalRelation, setModalRelation] = useState("Child"); // Default to Child
   const [modalFullName, setModalFullName] = useState("");
   const [modalSurname, setModalSurname] = useState("");
   const [modalFatherName, setModalFatherName] = useState("");
@@ -91,6 +93,11 @@ export default function RegistrationSection() {
   const [modalIsMarried, setModalIsMarried] = useState(false);
   const [modalSpouseName, setModalSpouseName] = useState("");
   const [modalSpouseSurname, setModalSpouseSurname] = useState("");
+  // New fields for Spouse's parents (when adding a married Child/Sibling)
+  const [modalSpouseFatherName, setModalSpouseFatherName] = useState("");
+  const [modalSpouseFatherSurname, setModalSpouseFatherSurname] = useState("");
+  const [modalSpouseMotherName, setModalSpouseMotherName] = useState("");
+  const [modalSpouseMotherSurname, setModalSpouseMotherSurname] = useState("");
 
   const updateGuardian = (field: keyof GuardianDetails, value: string) => {
     setGuardian((prev) => ({ ...prev, [field]: value }));
@@ -98,22 +105,31 @@ export default function RegistrationSection() {
 
   const openMemberModal = () => {
     setEditingMemberIndex(null);
+    setModalRelation("Child");
+    // Trigger auto-fill for Child initially
+    setModalFatherName(guardian.fullName);
+    setModalFatherSurname(guardian.surname);
+    // Assuming guardian is Father, mother is his wife
+    setModalMotherName(guardian.wifeName);
+    setModalMotherSurname(guardian.wifeSurname);
+
     setModalFullName("");
     setModalSurname("");
-    setModalFatherName("");
-    setModalFatherSurname("");
-    setModalMotherName("");
-    setModalMotherSurname("");
     setModalDob("");
     setModalIsMarried(false);
     setModalSpouseName("");
     setModalSpouseSurname("");
+    setModalSpouseFatherName("");
+    setModalSpouseFatherSurname("");
+    setModalSpouseMotherName("");
+    setModalSpouseMotherSurname("");
     setShowMemberModal(true);
   };
 
   const openEditMemberModal = (index: number) => {
     const member = members[index];
     setEditingMemberIndex(index);
+    setModalRelation(member.relation || "Child");
     setModalFullName(member.fullName);
     setModalSurname(member.surname);
     setModalFatherName(member.fatherName);
@@ -124,12 +140,61 @@ export default function RegistrationSection() {
     setModalIsMarried(member.isMarried);
     setModalSpouseName(member.spouseName || "");
     setModalSpouseSurname(member.spouseSurname || "");
+    // Note: We don't have spouse parent info stored in member currently, so these will be empty on edit
+    setModalSpouseFatherName("");
+    setModalSpouseFatherSurname("");
+    setModalSpouseMotherName("");
+    setModalSpouseMotherSurname("");
     setShowMemberModal(true);
   };
 
   const closeMemberModal = () => {
     setShowMemberModal(false);
     setEditingMemberIndex(null);
+  };
+
+  const handleRelationChange = (relation: string) => {
+    setModalRelation(relation);
+    setModalIsMarried(false); // Reset married status on relation change
+
+    if (relation === "Father") {
+      setModalFullName(guardian.fatherName);
+      setModalSurname(guardian.fatherSurname);
+      // Father's father/mother unknown or manual
+      setModalFatherName("");
+      setModalFatherSurname("");
+      setModalMotherName("");
+      setModalMotherSurname("");
+    } else if (relation === "Mother") {
+      setModalFullName(guardian.motherName);
+      setModalSurname(guardian.motherSurname);
+      setModalFatherName("");
+      setModalFatherSurname("");
+      setModalMotherName("");
+      setModalMotherSurname("");
+    } else if (relation === "Partner") { // Wife/Husband
+      setModalFullName(guardian.wifeName);
+      setModalSurname(guardian.wifeSurname);
+      // Partner's parents unknown or manual
+      setModalFatherName("");
+      setModalFatherSurname("");
+      setModalMotherName("");
+      setModalMotherSurname("");
+    } else if (relation === "Child") {
+      setModalFullName("");
+      setModalSurname("");
+      setModalFatherName(guardian.fullName);
+      setModalFatherSurname(guardian.surname);
+      setModalMotherName(guardian.wifeName);
+      setModalMotherSurname(guardian.wifeSurname);
+    } else if (relation === "Sibling") {
+      setModalFullName("");
+      setModalSurname("");
+      setModalFatherName(guardian.fatherName);
+      setModalFatherSurname(guardian.fatherSurname);
+      setModalMotherName(guardian.motherName);
+      setModalMotherSurname(guardian.motherSurname);
+    }
   };
 
   const saveMember = () => {
@@ -144,6 +209,7 @@ export default function RegistrationSection() {
       return;
     }
 
+    // Prepare Primary Member
     const newMember: Member = {
       fullName: modalFullName,
       surname: modalSurname,
@@ -155,16 +221,40 @@ export default function RegistrationSection() {
       isMarried: modalIsMarried,
       spouseName: modalIsMarried ? modalSpouseName : "",
       spouseSurname: modalIsMarried ? modalSpouseSurname : "",
+      relation: modalRelation,
     };
+
+    let membersToAdd: Member[] = [newMember];
+
+    // If Married Child/Sibling -> Create Spouse Member
+    if (modalIsMarried && (modalRelation === "Child" || modalRelation === "Sibling")) {
+      const spouseMember: Member = {
+        fullName: modalSpouseName,
+        surname: modalSpouseSurname,
+        fatherName: modalSpouseFatherName,
+        fatherSurname: modalSpouseFatherSurname,
+        motherName: modalSpouseMotherName,
+        motherSurname: modalSpouseMotherSurname,
+        dob: "", // Spouse DOB possibly separate, leaving blank or add field
+        isMarried: true,
+        spouseName: modalFullName,
+        spouseSurname: modalSurname,
+        relation: "Other", // Or In-law
+      };
+      membersToAdd.push(spouseMember);
+    }
 
     if (editingMemberIndex !== null) {
       const updated = [...members];
+      // On edit, we only update the single member being edited. 
+      // Complexity: If they toggle married on edit, should we generate spouse?
+      // For now, let's treat edit as single member update to avoid duplicates.
       updated[editingMemberIndex] = newMember;
       setMembers(updated);
       toast.success("Member updated", { position: "top-center", autoClose: 2000 });
     } else {
-      setMembers([...members, newMember]);
-      toast.success("Member added", { position: "top-center", autoClose: 2000 });
+      setMembers([...members, ...membersToAdd]);
+      toast.success(membersToAdd.length > 1 ? "Member & Spouse added" : "Member added", { position: "top-center", autoClose: 2000 });
     }
 
     closeMemberModal();
@@ -612,6 +702,23 @@ export default function RegistrationSection() {
             </div>
 
             <div className="space-y-3">
+              {/* Relation Dropdown */}
+              <div>
+                <label className="text-xs font-medium text-gray-500">Relation with Guardian *</label>
+                <select
+                  className="w-full text-gray-900 p-2 border rounded"
+                  value={modalRelation}
+                  onChange={(e) => handleRelationChange(e.target.value)}
+                >
+                  <option value="Child">Child</option>
+                  <option value="Father">Father</option>
+                  <option value="Mother">Mother</option>
+                  <option value="Partner">Partner (Wife/Husband)</option>
+                  <option value="Sibling">Sibling</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-xs font-medium text-gray-500">Full Name *</label>
@@ -668,27 +775,58 @@ export default function RegistrationSection() {
                 <input type="date" className="w-full p-2 border rounded" value={modalDob} onChange={(e) => setModalDob(e.target.value)} />
               </div>
 
-              <div className="pt-2">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" checked={modalIsMarried} onChange={(e) => setModalIsMarried(e.target.checked)} className="w-4 h-4 text-emerald-600 rounded" />
-                  <span className="text-sm font-medium text-gray-700">Is Married?</span>
-                </label>
-              </div>
+              {/* Marital Status (Only for Child/Sibling) */}
+              {(modalRelation === "Child" || modalRelation === "Sibling") && (
+                <div className="pt-2">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={modalIsMarried} onChange={(e) => setModalIsMarried(e.target.checked)} className="w-4 h-4 text-emerald-600 rounded" />
+                    <span className="text-sm font-medium text-gray-700">Is Married?</span>
+                  </label>
+                </div>
+              )}
 
               {modalIsMarried && (
-                <div className="grid grid-cols-2 gap-3 p-3 bg-gray-50 rounded-lg">
-                  <div>
-                    <label className="text-xs font-medium text-gray-500">Spouse Name *</label>
-                    <input className="w-full p-2 border rounded" value={modalSpouseName} onChange={(e) => setModalSpouseName(e.target.value)} />
+                <div className="space-y-3 p-3 bg-gray-50 rounded-lg border">
+                  <h4 className="text-sm font-semibold text-gray-700 border-b pb-1">Spouse Details</h4>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-xs font-medium text-gray-500">Spouse Name *</label>
+                      <input className="w-full p-2 border rounded" value={modalSpouseName} onChange={(e) => setModalSpouseName(e.target.value)} />
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-gray-500">Spouse Surname *</label>
+                      <input className="w-full p-2 border rounded" value={modalSpouseSurname} onChange={(e) => setModalSpouseSurname(e.target.value)} />
+                    </div>
                   </div>
-                  <div>
-                    <label className="text-xs font-medium text-gray-500">Spouse Surname *</label>
-                    <input className="w-full p-2 border rounded" value={modalSpouseSurname} onChange={(e) => setModalSpouseSurname(e.target.value)} />
+
+                  {/* Spouse Parents - Required for auto-generating spouse member */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-xs font-medium text-gray-500">Spouse's Father Name</label>
+                      <input className="w-full p-2 border rounded" value={modalSpouseFatherName} onChange={(e) => setModalSpouseFatherName(e.target.value)} />
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-gray-500">Spouse's Father Surname</label>
+                      <input className="w-full p-2 border rounded" value={modalSpouseFatherSurname} onChange={(e) => setModalSpouseFatherSurname(e.target.value)} />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-xs font-medium text-gray-500">Spouse's Mother Name</label>
+                      <input className="w-full p-2 border rounded" value={modalSpouseMotherName} onChange={(e) => setModalSpouseMotherName(e.target.value)} />
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-gray-500">Spouse's Mother Surname</label>
+                      <input className="w-full p-2 border rounded" value={modalSpouseMotherSurname} onChange={(e) => setModalSpouseMotherSurname(e.target.value)} />
+                    </div>
                   </div>
                 </div>
               )}
 
-              <button onClick={saveMember} className="w-full mt-4 bg-emerald-600 text-white py-3 rounded-lg font-semibold hover:bg-emerald-700">Save Member</button>
+              <button onClick={saveMember} className="w-full mt-4 bg-emerald-600 text-white py-3 rounded-lg font-semibold hover:bg-emerald-700">
+                {modalIsMarried && (modalRelation === "Child" || modalRelation === "Sibling") ? "Save Member & Spouse" : "Save Member"}
+              </button>
             </div>
           </div>
         </div>
