@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { db, auth } from "@/app/lib/firebase";
-import { collection, getDocs, doc, updateDoc, deleteDoc } from "firebase/firestore";
+import { collection, getDocs, doc, updateDoc, deleteDoc, addDoc } from "firebase/firestore";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import {
   Home, Users, LogOut, Download, FileText,
@@ -54,6 +54,24 @@ interface UnitData {
   obligations?: { subcollection: string; amount: string | number }[];
 }
 
+interface UnitData {
+  id: string; // Document ID (usually House ID)
+  houseId: string;
+  houseName: string;
+  guardianName: string;
+  guardianDob: string;
+  guardianAadhaarLast4: string;
+  members: { member_id: string; name: string }[];
+  obligations?: { subcollection: string; amount: string | number }[];
+}
+
+interface AreaAccount {
+  id: string;
+  area: string;
+  headPersonName: string;
+  password: string;
+}
+
 export default function AdminDashboard() {
   const router = useRouter();
   const [families, setFamilies] = useState<FamilyData[]>([]);
@@ -66,11 +84,16 @@ export default function AdminDashboard() {
   const [showEditModal, setShowEditModal] = useState(false);
 
   // Units State
-  const [activeTab, setActiveTab] = useState<"families" | "units">("families");
+  const [activeTab, setActiveTab] = useState<"families" | "units" | "areas">("families");
   const [units, setUnits] = useState<UnitData[]>([]);
   const [filteredUnits, setFilteredUnits] = useState<UnitData[]>([]);
   const [unitsLoading, setUnitsLoading] = useState(true);
   const [unitSearchTerm, setUnitSearchTerm] = useState("");
+
+  // Area Accounts State
+  const [areaAccounts, setAreaAccounts] = useState<AreaAccount[]>([]);
+  const [newArea, setNewArea] = useState({ area: "", headPersonName: "", password: "" });
+  const [areaLoading, setAreaLoading] = useState(false);
 
   // Auth check
   useEffect(() => {
@@ -86,6 +109,7 @@ export default function AdminDashboard() {
   useEffect(() => {
     fetchFamilies();
     fetchUnits();
+    fetchAreas();
   }, []);
 
   // Filter Units
@@ -135,7 +159,24 @@ export default function AdminDashboard() {
       const querySnapshot = await getDocs(collection(db, "families"));
       const data: FamilyData[] = [];
       querySnapshot.forEach((doc) => {
-        data.push({ id: doc.id, ...doc.data() } as FamilyData);
+        const docData = doc.data();
+        // Fallback for missing primaryMember
+        let primary = docData.primaryMember;
+        if (!primary) {
+          if (docData.members && docData.members.length > 0) {
+            // Try to find guardian, otherwise use first member
+            const guardian = docData.members.find((m: any) => m.isGuardian) || docData.members[0];
+            primary = {
+              name: guardian.fullName || guardian.name || "Unknown",
+              phone: guardian.phone || "",
+              whatsapp: guardian.whatsapp || ""
+            };
+          } else {
+            primary = { name: "Unknown", phone: "", whatsapp: "" };
+          }
+        }
+
+        data.push({ id: doc.id, ...docData, primaryMember: primary } as FamilyData);
       });
       setFamilies(data);
     } catch (error) {
@@ -159,6 +200,53 @@ export default function AdminDashboard() {
       toast.error("Failed to load synced units data");
     } finally {
       setUnitsLoading(false);
+    }
+  };
+
+  const fetchAreas = async () => {
+    try {
+      const querySnapshot = await getDocs(collection(db, "area_accounts"));
+      const data: AreaAccount[] = [];
+      querySnapshot.forEach((doc) => {
+        data.push({ id: doc.id, ...doc.data() } as AreaAccount);
+      });
+      setAreaAccounts(data);
+    } catch (error) {
+      console.error("Error fetching areas:", error);
+      toast.error("Failed to load area accounts");
+    }
+  };
+
+  const handleAddArea = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newArea.area || !newArea.headPersonName || !newArea.password) {
+      toast.error("All fields are required");
+      return;
+    }
+
+    setAreaLoading(true);
+    try {
+      await addDoc(collection(db, "area_accounts"), newArea);
+      toast.success("Area Account added successfully");
+      setNewArea({ area: "", headPersonName: "", password: "" });
+      fetchAreas();
+    } catch (error) {
+      console.error("Error adding area:", error);
+      toast.error("Failed to add area account");
+    } finally {
+      setAreaLoading(false);
+    }
+  };
+
+  const handleDeleteArea = async (id: string, name: string) => {
+    if (!confirm(`Are you sure you want to delete the account for ${name}?`)) return;
+    try {
+      await deleteDoc(doc(db, "area_accounts", id));
+      toast.success("Area Account deleted");
+      fetchAreas();
+    } catch (error) {
+      console.error("Error deleting area:", error);
+      toast.error("Failed to delete area account");
     }
   };
 
@@ -333,8 +421,8 @@ export default function AdminDashboard() {
           <button
             onClick={() => setActiveTab("families")}
             className={`px-6 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${activeTab === "families"
-                ? "bg-white text-blue-600 shadow-sm"
-                : "text-blue-600 hover:bg-blue-200"
+              ? "bg-white text-blue-600 shadow-sm"
+              : "text-blue-600 hover:bg-blue-200"
               }`}
           >
             Web Registrations
@@ -342,15 +430,24 @@ export default function AdminDashboard() {
           <button
             onClick={() => setActiveTab("units")}
             className={`px-6 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${activeTab === "units"
-                ? "bg-white text-blue-600 shadow-sm"
-                : "text-blue-600 hover:bg-blue-200"
+              ? "bg-white text-blue-600 shadow-sm"
+              : "text-blue-600 hover:bg-blue-200"
               }`}
           >
             Synced Units
           </button>
+          <button
+            onClick={() => setActiveTab("areas")}
+            className={`px-6 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${activeTab === "areas"
+              ? "bg-white text-blue-600 shadow-sm"
+              : "text-blue-600 hover:bg-blue-200"
+              }`}
+          >
+            Area Controllers
+          </button>
         </div>
 
-        {activeTab === "families" ? (
+        {activeTab === "families" && (
           <>
             {/* Stats Cards */}
             <div className="grid md:grid-cols-3 gap-6 mb-8">
@@ -519,7 +616,9 @@ export default function AdminDashboard() {
               </div>
             </div>
           </>
-        ) : (
+        )}
+
+        {activeTab === "units" && (
           <>
             {/* Units View */}
             <div className="grid md:grid-cols-3 gap-6 mb-8">
@@ -618,153 +717,253 @@ export default function AdminDashboard() {
             </div>
           </>
         )}
+
+        {activeTab === "areas" && (
+
+          <div className="bg-white rounded-xl shadow-lg p-6">
+            <h2 className="text-xl font-bold text-gray-800 mb-6">Area Controller Accounts</h2>
+
+            {/* Add New Area Form */}
+            <form onSubmit={handleAddArea} className="bg-slate-50 p-6 rounded-xl border border-gray-200 mb-8">
+              <h3 className="text-lg font-semibold text-gray-700 mb-4">Add New Controller</h3>
+              <div className="grid md:grid-cols-3 gap-4 mb-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-600 mb-1">Area Name</label>
+                  <select
+                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                    value={newArea.area}
+                    onChange={(e) => setNewArea({ ...newArea, area: e.target.value })}
+                    required
+                  >
+                    <option value="">Select Area</option>
+                    <option value="Ramanatukara">Ramanatukara</option>
+                    <option value="Pullumkunn">Pullumkunn</option>
+                    <option value="Idimuyikkal">Idimuyikkal</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-600 mb-1">Head Person Name</label>
+                  <input
+                    type="text"
+                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                    value={newArea.headPersonName}
+                    onChange={(e) => setNewArea({ ...newArea, headPersonName: e.target.value })}
+                    placeholder="e.g. John Doe"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-600 mb-1">Password</label>
+                  <input
+                    type="text"
+                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                    value={newArea.password}
+                    onChange={(e) => setNewArea({ ...newArea, password: e.target.value })}
+                    placeholder="Set login password"
+                    required
+                  />
+                </div>
+              </div>
+              <button
+                type="submit"
+                disabled={areaLoading}
+                className="bg-emerald-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-emerald-700 transition disabled:opacity-50"
+              >
+                {areaLoading ? "Adding..." : "+ Create Account"}
+              </button>
+            </form>
+
+            {/* List Areas */}
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-100 text-gray-600">
+                  <tr>
+                    <th className="px-6 py-3 text-left">Area</th>
+                    <th className="px-6 py-3 text-left">Head Person</th>
+                    <th className="px-6 py-3 text-left">Password</th>
+                    <th className="px-6 py-3 text-center">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {areaAccounts.map((account) => (
+                    <tr key={account.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-3 font-medium text-gray-900">{account.area}</td>
+                      <td className="px-6 py-3 text-gray-600">{account.headPersonName}</td>
+                      <td className="px-6 py-3 text-gray-500 font-mono">{account.password}</td>
+                      <td className="px-6 py-3 text-center">
+                        <button
+                          onClick={() => handleDeleteArea(account.id, account.area)}
+                          className="text-red-600 hover:text-red-800 p-2 hover:bg-red-50 rounded transition"
+                          title="Delete Account"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                  {areaAccounts.length === 0 && (
+                    <tr>
+                      <td colSpan={4} className="px-6 py-8 text-center text-gray-500">
+                        No area controllers added yet.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
       </div>
 
       {/* Edit Modal */}
-      {showEditModal && editingFamily && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-8">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-gray-900">Edit Family Details</h2>
-              <button
-                onClick={() => setShowEditModal(false)}
-                className="p-2 hover:bg-gray-100 rounded-lg transition"
-              >
-                <X className="w-5 h-5 text-gray-500" />
-              </button>
-            </div>
-
-            <div className="space-y-4">
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Family Name
-                  </label>
-                  <input
-                    type="text"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                    value={editingFamily.familyName}
-                    onChange={(e) =>
-                      setEditingFamily({ ...editingFamily, familyName: e.target.value })
-                    }
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    House Name
-                  </label>
-                  <input
-                    type="text"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                    value={editingFamily.houseName}
-                    onChange={(e) =>
-                      setEditingFamily({ ...editingFamily, houseName: e.target.value })
-                    }
-                  />
-                </div>
-              </div>
-
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Location
-                  </label>
-                  <input
-                    type="text"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                    value={editingFamily.location}
-                    onChange={(e) =>
-                      setEditingFamily({ ...editingFamily, location: e.target.value })
-                    }
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Road Name
-                  </label>
-                  <input
-                    type="text"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                    value={editingFamily.roadName}
-                    onChange={(e) =>
-                      setEditingFamily({ ...editingFamily, roadName: e.target.value })
-                    }
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Address
-                </label>
-                <textarea
-                  rows={3}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none"
-                  value={editingFamily.address}
-                  onChange={(e) =>
-                    setEditingFamily({ ...editingFamily, address: e.target.value })
-                  }
-                />
-              </div>
-
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Contact Person
-                  </label>
-                  <input
-                    type="text"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                    value={editingFamily.primaryMember.name}
-                    onChange={(e) =>
-                      setEditingFamily({
-                        ...editingFamily,
-                        primaryMember: { ...editingFamily.primaryMember, name: e.target.value },
-                      })
-                    }
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Phone Number
-                  </label>
-                  <input
-                    type="tel"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                    value={editingFamily.primaryMember.phone}
-                    onChange={(e) =>
-                      setEditingFamily({
-                        ...editingFamily,
-                        primaryMember: { ...editingFamily.primaryMember, phone: e.target.value },
-                      })
-                    }
-                  />
-                </div>
-              </div>
-
-              <div className="flex gap-3 pt-4">
+      {
+        showEditModal && editingFamily && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-8">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-gray-900">Edit Family Details</h2>
                 <button
                   onClick={() => setShowEditModal(false)}
-                  className="flex-1 py-3 border-2 border-gray-300 rounded-lg hover:bg-gray-50 transition font-medium text-gray-700"
+                  className="p-2 hover:bg-gray-100 rounded-lg transition"
                 >
-                  Cancel
+                  <X className="w-5 h-5 text-gray-500" />
                 </button>
-                <button
-                  onClick={handleSaveEdit}
-                  className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-lg font-semibold hover:shadow-lg transition"
-                >
-                  Save Changes
-                </button>
+              </div>
+
+              <div className="space-y-4">
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Family Name
+                    </label>
+                    <input
+                      type="text"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                      value={editingFamily.familyName}
+                      onChange={(e) =>
+                        setEditingFamily({ ...editingFamily, familyName: e.target.value })
+                      }
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      House Name
+                    </label>
+                    <input
+                      type="text"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                      value={editingFamily.houseName}
+                      onChange={(e) =>
+                        setEditingFamily({ ...editingFamily, houseName: e.target.value })
+                      }
+                    />
+                  </div>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Location
+                    </label>
+                    <input
+                      type="text"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                      value={editingFamily.location}
+                      onChange={(e) =>
+                        setEditingFamily({ ...editingFamily, location: e.target.value })
+                      }
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Road Name
+                    </label>
+                    <input
+                      type="text"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                      value={editingFamily.roadName}
+                      onChange={(e) =>
+                        setEditingFamily({ ...editingFamily, roadName: e.target.value })
+                      }
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Address
+                  </label>
+                  <textarea
+                    rows={3}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none"
+                    value={editingFamily.address}
+                    onChange={(e) =>
+                      setEditingFamily({ ...editingFamily, address: e.target.value })
+                    }
+                  />
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Contact Person
+                    </label>
+                    <input
+                      type="text"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                      value={editingFamily.primaryMember.name}
+                      onChange={(e) =>
+                        setEditingFamily({
+                          ...editingFamily,
+                          primaryMember: { ...editingFamily.primaryMember, name: e.target.value },
+                        })
+                      }
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Phone Number
+                    </label>
+                    <input
+                      type="tel"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                      value={editingFamily.primaryMember.phone}
+                      onChange={(e) =>
+                        setEditingFamily({
+                          ...editingFamily,
+                          primaryMember: { ...editingFamily.primaryMember, phone: e.target.value },
+                        })
+                      }
+                    />
+                  </div>
+                </div>
+
+                <div className="flex gap-3 pt-4">
+                  <button
+                    onClick={() => setShowEditModal(false)}
+                    className="flex-1 py-3 border-2 border-gray-300 rounded-lg hover:bg-gray-50 transition font-medium text-gray-700"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSaveEdit}
+                    className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-lg font-semibold hover:shadow-lg transition"
+                  >
+                    Save Changes
+                  </button>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )
+      }
 
       <ToastContainer />
-    </div>
+    </div >
   );
 }

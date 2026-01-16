@@ -38,6 +38,7 @@ interface GuardianDetails {
   phone: string;
   whatsapp: string;
   photoURL: string;
+  grandFatherName: string;
 }
 
 export default function RegistrationSection() {
@@ -51,14 +52,19 @@ export default function RegistrationSection() {
   // Step 1 - House Details
   const [houseName, setHouseName] = useState("");
   const [familyName, setFamilyName] = useState("");
-  const [location, setLocation] = useState("");
+  const [location, setLocation] = useState(""); // This is typically "Landmark" or specific spot
+  const [locality, setLocality] = useState(""); // This is the "Area" (Ramanatukara, etc.)
   const [roadName, setRoadName] = useState("");
   const [address, setAddress] = useState("");
+
+  const AREAS = ["Ramanatukara", "Pullumkunn", "Idimuyikkal", "Other"];
+
 
   // Step 2 - Guardian Details
   const [guardian, setGuardian] = useState<GuardianDetails>({
     fullName: "",
     surname: "",
+    grandFatherName: "",
     fatherName: "",
     fatherSurname: "",
     motherName: "",
@@ -325,7 +331,7 @@ export default function RegistrationSection() {
 
   // --- Validation ---
   const validateStep1 = () => {
-    if (!houseName || !familyName || !location || !roadName || !address) {
+    if (!houseName || !familyName || !location || !locality || !roadName || !address) {
       toast.error("Please fill all House Information fields", { position: "top-center", autoClose: 3000 });
       return false;
     }
@@ -391,6 +397,7 @@ export default function RegistrationSection() {
         phone: finalGuardian.phone,
         whatsapp: finalGuardian.whatsapp,
         photoURL: finalGuardian.photoURL,
+        grandFatherName: finalGuardian.grandFatherName, // Custom field for guardian
         isGuardian: true
       };
 
@@ -405,7 +412,12 @@ export default function RegistrationSection() {
       const data = {
         houseName,
         familyName,
+        houseName,
+        familyName,
         location,
+        locality, // Area
+        area: locality, // Alias for easier querying
+        areaVerified: false, // Default verification status
         roadName,
         address,
         // Guardian is now part of members array
@@ -475,6 +487,19 @@ export default function RegistrationSection() {
                     value={location} onChange={(e) => setLocation(e.target.value)} />
                 </div>
                 <div>
+                  <label className="block text-sm font-medium text-gray-700">Area / Locality *</label>
+                  <select
+                    className="w-full text-gray-900 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+                    value={locality}
+                    onChange={(e) => setLocality(e.target.value)}
+                  >
+                    <option value="">Select Area</option>
+                    {AREAS.map((area) => (
+                      <option key={area} value={area}>{area}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
                   <label className="block text-sm font-medium text-gray-700">Road Name *</label>
                   <input type="text" className="w-full text-gray-900 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
                     value={roadName} onChange={(e) => setRoadName(e.target.value)} />
@@ -535,6 +560,16 @@ export default function RegistrationSection() {
                   <label className="block text-sm font-medium text-gray-700">Father Name *</label>
                   <input type="text" className="w-full text-gray-900 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
                     value={guardian.fatherName} onChange={(e) => updateGuardian("fatherName", e.target.value)} />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Grandfather Name</label>
+                  <input
+                    type="text"
+                    className="w-full text-gray-900 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+                    value={guardian.grandFatherName || ""}
+                    onChange={(e) => updateGuardian("grandFatherName", e.target.value)}
+                    placeholder="Father's Father Name"
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Father Surname *</label>
@@ -646,6 +681,7 @@ export default function RegistrationSection() {
                 <div className="grid grid-cols-2 text-gray-800 gap-x-4 gap-y-2 text-md">
                   <p><span className="text-gray-700 text-sm block">House Name</span>{houseName}</p>
                   <p><span className="text-gray-700 text-sm block">Family Name</span>{familyName}</p>
+                  <p><span className="text-gray-700 text-sm block">Area</span>{locality}</p>
                   <p className="col-span-2"><span className="text-gray-700 text-sm block">Address</span>{address}, {roadName}, {location}</p>
                 </div>
               </div>
