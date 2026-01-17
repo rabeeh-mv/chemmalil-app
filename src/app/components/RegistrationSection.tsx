@@ -412,8 +412,6 @@ export default function RegistrationSection() {
       const data = {
         houseName,
         familyName,
-        houseName,
-        familyName,
         location,
         locality, // Area
         area: locality, // Alias for easier querying
