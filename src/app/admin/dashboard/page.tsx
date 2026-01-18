@@ -728,7 +728,7 @@ export default function AdminDashboard() {
               <h3 className="text-lg font-semibold text-gray-700 mb-4">Add New Controller</h3>
               <div className="grid md:grid-cols-3 gap-4 mb-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-600 mb-1">Area Name</label>
+                  <label className="block text-sm font-medium text-gray-900 mb-1">Area Name</label>
                   <select
                     className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
                     value={newArea.area}
@@ -743,7 +743,7 @@ export default function AdminDashboard() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-600 mb-1">Head Person Name</label>
+                  <label className="block text-sm font-medium text-gray-900 mb-1">Head Person Name</label>
                   <input
                     type="text"
                     className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
@@ -754,7 +754,7 @@ export default function AdminDashboard() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-600 mb-1">Password</label>
+                  <label className="block text-sm font-medium text-gray-900 mb-1">Password</label>
                   <input
                     type="text"
                     className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"

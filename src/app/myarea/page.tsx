@@ -156,7 +156,7 @@ export default function AreaPortal() {
 
                     <form onSubmit={handleLogin} className="space-y-6">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Area Name</label>
+                            <label className="block text-sm font-medium text-gray-900 mb-1">Area Name</label>
                             <select
                                 className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
                                 value={areaName}
@@ -172,7 +172,7 @@ export default function AreaPortal() {
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                            <label className="block text-sm font-medium text-gray-900 mb-1">Password</label>
                             <input
                                 type="password"
                                 className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
@@ -203,7 +203,7 @@ export default function AreaPortal() {
             <nav className="bg-white shadow-sm px-6 py-4 flex justify-between items-center sticky top-0 z-10">
                 <div className="flex items-center space-x-2">
                     <MapPin className="w-6 h-6 text-emerald-600" />
-                    <span className="font-bold text-lg text-gray-800">{currentArea?.area} Area</span>
+                    <span className="font-bold text-lg text-gray-900">{currentArea?.area} Area</span>
                 </div>
                 <div className="flex items-center space-x-4">
                     <span className="text-sm text-gray-500 hidden sm:block">Controller: {currentArea?.headPersonName}</span>
@@ -218,7 +218,7 @@ export default function AreaPortal() {
 
             <main className="max-w-7xl mx-auto p-4 sm:p-6">
                 <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-2xl font-bold text-gray-800">Pending Verifications</h2>
+                    <h2 className="text-2xl font-bold text-gray-900">Pending Verifications</h2>
                     <button
                         onClick={() => fetchPendingData(currentArea.area)}
                         className="text-emerald-600 hover:text-emerald-700 font-medium"
@@ -312,7 +312,7 @@ export default function AreaPortal() {
                                     <h3 className="text-lg font-semibold text-gray-700 mb-4 pb-2 border-b">House Information</h3>
                                     <div className="grid md:grid-cols-2 gap-4">
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">Family Name</label>
+                                            <label className="block text-sm font-medium text-gray-900 mb-1">Family Name</label>
                                             <input
                                                 type="text"
                                                 className="w-full p-2 border rounded focus:ring-2 focus:ring-emerald-500 outline-none"
@@ -322,7 +322,7 @@ export default function AreaPortal() {
                                             />
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">House Name</label>
+                                            <label className="block text-sm font-medium text-gray-900 mb-1">House Name</label>
                                             <input
                                                 type="text"
                                                 className="w-full p-2 border rounded focus:ring-2 focus:ring-emerald-500 outline-none"
@@ -332,7 +332,7 @@ export default function AreaPortal() {
                                             />
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">Location / Place</label>
+                                            <label className="block text-sm font-medium text-gray-900 mb-1">Location / Place</label>
                                             <input
                                                 type="text"
                                                 className="w-full p-2 border rounded focus:ring-2 focus:ring-emerald-500 outline-none"
@@ -342,7 +342,7 @@ export default function AreaPortal() {
                                             />
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">Locality (Selection)</label>
+                                            <label className="block text-sm font-medium text-gray-900 mb-1">Locality (Selection)</label>
                                             <select
                                                 className="w-full p-2 border rounded focus:ring-2 focus:ring-emerald-500 outline-none"
                                                 value={editingFamily.locality || ""}
@@ -356,7 +356,7 @@ export default function AreaPortal() {
                                             </select>
                                         </div>
                                         <div className="md:col-span-2">
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">Full Address</label>
+                                            <label className="block text-sm font-medium text-gray-900 mb-1">Full Address</label>
                                             <textarea
                                                 className="w-full p-2 border rounded focus:ring-2 focus:ring-emerald-500 outline-none"
                                                 rows={2}
@@ -383,7 +383,7 @@ export default function AreaPortal() {
                                                 {/* Personal Basics */}
                                                 <div className="grid md:grid-cols-4 gap-3 mb-3">
                                                     <div className="col-span-2 md:col-span-1">
-                                                        <label className="block text-xs font-medium text-gray-500 mb-1">First Name</label>
+                                                        <label className="block text-xs font-medium text-gray-900 mb-1">First Name</label>
                                                         <input
                                                             type="text"
                                                             className="w-full p-2 text-sm border rounded focus:ring-1 focus:ring-emerald-500 outline-none"
@@ -392,7 +392,7 @@ export default function AreaPortal() {
                                                         />
                                                     </div>
                                                     <div className="col-span-2 md:col-span-1">
-                                                        <label className="block text-xs font-medium text-gray-500 mb-1">Surname</label>
+                                                        <label className="block text-xs font-medium text-gray-900 mb-1">Surname</label>
                                                         <input
                                                             type="text"
                                                             className="w-full p-2 text-sm border rounded focus:ring-1 focus:ring-emerald-500 outline-none"
@@ -401,7 +401,7 @@ export default function AreaPortal() {
                                                         />
                                                     </div>
                                                     <div>
-                                                        <label className="block text-xs font-medium text-gray-500 mb-1">Date of Birth</label>
+                                                        <label className="block text-xs font-medium text-gray-900 mb-1">Date of Birth</label>
                                                         <input
                                                             type="date"
                                                             className="w-full p-2 text-sm border rounded focus:ring-1 focus:ring-emerald-500 outline-none"
@@ -410,7 +410,7 @@ export default function AreaPortal() {
                                                         />
                                                     </div>
                                                     <div>
-                                                        <label className="block text-xs font-medium text-gray-500 mb-1">Relation</label>
+                                                        <label className="block text-xs font-medium text-gray-900 mb-1">Relation</label>
                                                         <input
                                                             type="text"
                                                             className="w-full p-2 text-sm border rounded focus:ring-1 focus:ring-emerald-500 outline-none"
@@ -424,7 +424,7 @@ export default function AreaPortal() {
                                                 {/* Contact & ID (Mainly for Guardian) */}
                                                 <div className="grid md:grid-cols-3 gap-3 mb-3">
                                                     <div>
-                                                        <label className="block text-xs font-medium text-gray-500 mb-1">Phone</label>
+                                                        <label className="block text-xs font-medium text-gray-900 mb-1">Phone</label>
                                                         <input
                                                             type="text"
                                                             className="w-full p-2 text-sm border rounded focus:ring-1 focus:ring-emerald-500 outline-none"
@@ -434,7 +434,7 @@ export default function AreaPortal() {
                                                         />
                                                     </div>
                                                     <div>
-                                                        <label className="block text-xs font-medium text-gray-500 mb-1">Aadhaar (Last 4)</label>
+                                                        <label className="block text-xs font-medium text-gray-900 mb-1">Aadhaar (Last 4)</label>
                                                         <input
                                                             type="text"
                                                             maxLength={4}
@@ -445,7 +445,7 @@ export default function AreaPortal() {
                                                     </div>
                                                     {member.isGuardian && (
                                                         <div>
-                                                            <label className="block text-xs font-medium text-gray-500 mb-1">WhatsApp</label>
+                                                            <label className="block text-xs font-medium text-gray-900 mb-1">WhatsApp</label>
                                                             <input
                                                                 type="text"
                                                                 className="w-full p-2 text-sm border rounded focus:ring-1 focus:ring-emerald-500 outline-none"
@@ -459,7 +459,7 @@ export default function AreaPortal() {
                                                 {/* Parents Details */}
                                                 <div className="grid md:grid-cols-4 gap-3 mb-3 bg-white p-2 rounded border border-gray-100">
                                                     <div>
-                                                        <label className="block text-xs font-medium text-gray-400 mb-1">Father's Name</label>
+                                                        <label className="block text-xs font-medium text-gray-900 mb-1">Father's Name</label>
                                                         <input
                                                             type="text"
                                                             className="w-full p-1.5 text-sm border rounded focus:ring-1 focus:ring-emerald-500 outline-none bg-gray-50"
@@ -468,7 +468,7 @@ export default function AreaPortal() {
                                                         />
                                                     </div>
                                                     <div>
-                                                        <label className="block text-xs font-medium text-gray-400 mb-1">Father's Surname</label>
+                                                        <label className="block text-xs font-medium text-gray-900 mb-1">Father's Surname</label>
                                                         <input
                                                             type="text"
                                                             className="w-full p-1.5 text-sm border rounded focus:ring-1 focus:ring-emerald-500 outline-none bg-gray-50"
@@ -477,7 +477,7 @@ export default function AreaPortal() {
                                                         />
                                                     </div>
                                                     <div>
-                                                        <label className="block text-xs font-medium text-gray-400 mb-1">Mother's Name</label>
+                                                        <label className="block text-xs font-medium text-gray-900 mb-1">Mother's Name</label>
                                                         <input
                                                             type="text"
                                                             className="w-full p-1.5 text-sm border rounded focus:ring-1 focus:ring-emerald-500 outline-none bg-gray-50"
@@ -486,7 +486,7 @@ export default function AreaPortal() {
                                                         />
                                                     </div>
                                                     <div>
-                                                        <label className="block text-xs font-medium text-gray-400 mb-1">Mother's Surname</label>
+                                                        <label className="block text-xs font-medium text-gray-900 mb-1">Mother's Surname</label>
                                                         <input
                                                             type="text"
                                                             className="w-full p-1.5 text-sm border rounded focus:ring-1 focus:ring-emerald-500 outline-none bg-gray-50"
@@ -511,7 +511,7 @@ export default function AreaPortal() {
                                                     {member.isMarried && (
                                                         <div className="grid grid-cols-2 gap-2">
                                                             <div>
-                                                                <label className="block text-xs font-medium text-gray-500 mb-1">Spouse Name</label>
+                                                                <label className="block text-xs font-medium text-gray-900 mb-1">Spouse Name</label>
                                                                 <input
                                                                     type="text"
                                                                     className="w-full p-2 text-sm border rounded"
@@ -520,7 +520,7 @@ export default function AreaPortal() {
                                                                 />
                                                             </div>
                                                             <div>
-                                                                <label className="block text-xs font-medium text-gray-500 mb-1">Spouse Surname</label>
+                                                                <label className="block text-xs font-medium text-gray-900 mb-1">Spouse Surname</label>
                                                                 <input
                                                                     type="text"
                                                                     className="w-full p-2 text-sm border rounded"
@@ -532,7 +532,7 @@ export default function AreaPortal() {
                                                     )}
                                                     {member.isGuardian && (
                                                         <div className="col-span-2">
-                                                            <label className="block text-xs font-medium text-gray-500 mb-1">Grandfather Name</label>
+                                                            <label className="block text-xs font-medium text-gray-900 mb-1">Grandfather Name</label>
                                                             <input
                                                                 type="text"
                                                                 className="w-full p-2 text-sm border rounded focus:ring-1 focus:ring-emerald-500 outline-none"
