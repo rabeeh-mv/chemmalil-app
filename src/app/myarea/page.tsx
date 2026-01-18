@@ -158,7 +158,7 @@ export default function AreaPortal() {
                         <div>
                             <label className="block text-sm font-medium text-gray-900 mb-1">Area Name</label>
                             <select
-                                className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+                                className="w-full p-3 border text-gray-900 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
                                 value={areaName}
                                 onChange={(e) => setAreaName(e.target.value)}
                                 required
@@ -175,7 +175,7 @@ export default function AreaPortal() {
                             <label className="block text-sm font-medium text-gray-900 mb-1">Password</label>
                             <input
                                 type="password"
-                                className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+                                className="w-full text-gray-900 p-3 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 required

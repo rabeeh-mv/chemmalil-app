@@ -777,7 +777,7 @@ export default function AdminDashboard() {
             {/* List Areas */}
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-gray-100 text-gray-600">
+                <thead className="bg-gray-100 text-gray-900">
                   <tr>
                     <th className="px-6 py-3 text-left">Area</th>
                     <th className="px-6 py-3 text-left">Head Person</th>
@@ -789,8 +789,8 @@ export default function AdminDashboard() {
                   {areaAccounts.map((account) => (
                     <tr key={account.id} className="hover:bg-gray-50">
                       <td className="px-6 py-3 font-medium text-gray-900">{account.area}</td>
-                      <td className="px-6 py-3 text-gray-600">{account.headPersonName}</td>
-                      <td className="px-6 py-3 text-gray-500 font-mono">{account.password}</td>
+                      <td className="px-6 py-3 text-gray-900">{account.headPersonName}</td>
+                      <td className="px-6 py-3 text-gray-900 font-mono">{account.password}</td>
                       <td className="px-6 py-3 text-center">
                         <button
                           onClick={() => handleDeleteArea(account.id, account.area)}
