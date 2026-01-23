@@ -472,12 +472,12 @@ export default function RegistrationSection() {
                 <div>
                   <label className="block text-sm font-medium text-gray-700">House Name *</label>
                   <input type="text" className="w-full text-gray-900 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
-                    value={houseName} onChange={(e) => setHouseName(e.target.value)} placeholder="e.g., Al-Noor" />
+                    value={houseName} onChange={(e) => setHouseName(e.target.value)} placeholder="e.g., shaz House" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Family Name *</label>
                   <input type="text" className="w-full text-gray-900 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
-                    value={familyName} onChange={(e) => setFamilyName(e.target.value)} placeholder="e.g., Rahman Family" />
+                    value={familyName} onChange={(e) => setFamilyName(e.target.value)} placeholder="e.g., Vakatte poonattil" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Location *</label>
@@ -504,7 +504,7 @@ export default function RegistrationSection() {
                 </div>
                 <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-gray-700">Detailed Address *</label>
-                  <textarea rows={3} className="w-full text-gray-900 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none resize-none"
+                  <textarea placeholder="place,Post, PIN Code" rows={3} className="w-full text-gray-900 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none resize-none"
                     value={address} onChange={(e) => setAddress(e.target.value)} />
                 </div>
               </div>
@@ -546,12 +546,12 @@ export default function RegistrationSection() {
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Full Name *</label>
-                  <input type="text" className="w-full text-gray-900 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+                  <input placeholder="eg: rabeeh " type="text" className="w-full text-gray-900 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
                     value={guardian.fullName} onChange={(e) => updateGuardian("fullName", e.target.value)} />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Surname *</label>
-                  <input type="text" className="w-full text-gray-900 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+                  <input placeholder="eg: Vakatte poonattil" type="text" className="w-full text-gray-900 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
                     value={guardian.surname} onChange={(e) => updateGuardian("surname", e.target.value)} />
                 </div>
                 <div>
@@ -617,7 +617,7 @@ export default function RegistrationSection() {
               </div>
 
               <div className="flex gap-4 pt-4">
-                <button onClick={() => setStep(1)} className="flex-1 py-3 border rounded-lg hover:bg-gray-50 transition">Back</button>
+                <button onClick={() => setStep(1)} className="flex-1 py-3 border rounded-lg hover:bg-gray-50 text-gray-800 transition">Back</button>
                 <button onClick={() => validateStep2() && setStep(3)} className="flex-1 bg-emerald-600 text-white py-3 rounded-lg hover:bg-emerald-700 transition">Continue</button>
               </div>
             </div>
@@ -657,7 +657,7 @@ export default function RegistrationSection() {
               )}
 
               <div className="flex gap-4 pt-4">
-                <button onClick={() => setStep(2)} className="flex-1 py-3 border rounded-lg hover:bg-gray-50 transition">Back</button>
+                <button onClick={() => setStep(2)} className="flex-1 py-3 border rounded-lg hover:bg-gray-50 text-gray-800 transition">Back</button>
                 <button onClick={() => validateStep3() && setStep(4)} className="flex-1 bg-emerald-600 text-white py-3 rounded-lg hover:bg-emerald-700 transition">Review & Submit</button>
               </div>
             </div>
@@ -702,10 +702,10 @@ export default function RegistrationSection() {
               {/* Members Review */}
               <div className="bg-gray-50 p-4 rounded-xl border">
                 <div className="flex justify-between items-center mb-2">
-                  <h3 className="font-semibold text-gray-700">Members ({members.length})</h3>
+                  <h3 className="font-semibold text-gray-800">Members ({members.length})</h3>
                   <button onClick={() => setStep(3)} className="text-emerald-600 text-sm">Edit</button>
                 </div>
-                <ul className="space-y-2">
+                <ul className="space-y-2 text-gray-800">
                   {members.map((m, i) => (
                     <li key={i} className="text-sm bg-white p-2 rounded border">
                       <span className="font-medium">{m.fullName} {m.surname}</span>
@@ -716,7 +716,7 @@ export default function RegistrationSection() {
               </div>
 
               <div className="flex gap-4 pt-4">
-                <button onClick={() => setStep(3)} className="flex-1 py-3 border rounded-lg hover:bg-gray-50 transition">Back</button>
+                <button onClick={() => setStep(3)} className="flex-1 py-3 border rounded-lg hover:bg-gray-50 text-gray-800 transition">Back</button>
                 <button onClick={handleSubmit} disabled={loading} className="flex-1 bg-gradient-to-r from-emerald-600 to-teal-600 text-white py-3 rounded-lg font-semibold hover:shadow-lg transition">
                   {loading ? "Submitting..." : "Confirm Application"}
                 </button>
@@ -806,7 +806,7 @@ export default function RegistrationSection() {
 
               <div>
                 <label className="text-xs font-medium text-gray-500">Date of Birth</label>
-                <input type="date" className="w-full p-2 border rounded" value={modalDob} onChange={(e) => setModalDob(e.target.value)} />
+                <input type="date" className="w-full p-2 border text-gray-900 rounded" value={modalDob} onChange={(e) => setModalDob(e.target.value)} />
               </div>
 
               {/* Marital Status (Only for Child/Sibling) */}
@@ -875,7 +875,7 @@ export default function RegistrationSection() {
             </div>
             <h2 className="text-2xl font-bold text-gray-800 mb-2">Registration Complete!</h2>
             <p className="text-gray-600 mb-6">JazakAllah Khair! Your family details have been submitted successfully.</p>
-            <button onClick={() => window.location.reload()} className="w-full bg-emerald-600 text-white py-3 rounded-lg font-semibold">Start New Registration</button>
+            <button onClick={() => router.push("/")} className="w-full bg-emerald-600 text-white py-3 rounded-lg font-semibold">Go to Home</button>
           </div>
         </div>
       )}

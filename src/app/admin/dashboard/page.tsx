@@ -730,7 +730,7 @@ export default function AdminDashboard() {
                 <div>
                   <label className="block text-sm font-medium text-gray-900 mb-1">Area Name</label>
                   <select
-                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                    className="w-full px-4 py-2 text-gray-800 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
                     value={newArea.area}
                     onChange={(e) => setNewArea({ ...newArea, area: e.target.value })}
                     required
@@ -746,7 +746,7 @@ export default function AdminDashboard() {
                   <label className="block text-sm font-medium text-gray-900 mb-1">Head Person Name</label>
                   <input
                     type="text"
-                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                    className="w-full px-4 py-2 text-gray-800 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
                     value={newArea.headPersonName}
                     onChange={(e) => setNewArea({ ...newArea, headPersonName: e.target.value })}
                     placeholder="e.g. John Doe"
@@ -757,7 +757,7 @@ export default function AdminDashboard() {
                   <label className="block text-sm font-medium text-gray-900 mb-1">Password</label>
                   <input
                     type="text"
-                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                    className="w-full px-4 py-2 text-gray-800 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
                     value={newArea.password}
                     onChange={(e) => setNewArea({ ...newArea, password: e.target.value })}
                     placeholder="Set login password"
@@ -840,7 +840,7 @@ export default function AdminDashboard() {
                     </label>
                     <input
                       type="text"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                      className="w-full px-4 py-3 border text-gary-800 border-gray-00 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
                       value={editingFamily.familyName}
                       onChange={(e) =>
                         setEditingFamily({ ...editingFamily, familyName: e.target.value })
@@ -854,7 +854,7 @@ export default function AdminDashboard() {
                     </label>
                     <input
                       type="text"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                      className="w-full px-4 py-3 border text-gary-800 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
                       value={editingFamily.houseName}
                       onChange={(e) =>
                         setEditingFamily({ ...editingFamily, houseName: e.target.value })
@@ -870,7 +870,7 @@ export default function AdminDashboard() {
                     </label>
                     <input
                       type="text"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                      className="w-full px-4 py-3 text-gary-800 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
                       value={editingFamily.location}
                       onChange={(e) =>
                         setEditingFamily({ ...editingFamily, location: e.target.value })
@@ -884,7 +884,7 @@ export default function AdminDashboard() {
                     </label>
                     <input
                       type="text"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                      className="w-full px-4 py-3 text-gary-800 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
                       value={editingFamily.roadName}
                       onChange={(e) =>
                         setEditingFamily({ ...editingFamily, roadName: e.target.value })
@@ -899,7 +899,7 @@ export default function AdminDashboard() {
                   </label>
                   <textarea
                     rows={3}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none"
+                    className="w-full px-4 py-3 text-gary-800 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none"
                     value={editingFamily.address}
                     onChange={(e) =>
                       setEditingFamily({ ...editingFamily, address: e.target.value })
@@ -914,7 +914,7 @@ export default function AdminDashboard() {
                     </label>
                     <input
                       type="text"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                      className="w-full px-4 py-3 text-gary-800 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
                       value={editingFamily.primaryMember.name}
                       onChange={(e) =>
                         setEditingFamily({
@@ -931,7 +931,7 @@ export default function AdminDashboard() {
                     </label>
                     <input
                       type="tel"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                      className="w-full px-4 py-3 text-gary-800 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
                       value={editingFamily.primaryMember.phone}
                       onChange={(e) =>
                         setEditingFamily({
