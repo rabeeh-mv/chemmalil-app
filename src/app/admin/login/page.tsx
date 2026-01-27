@@ -16,7 +16,7 @@ export default function AdminLoginPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!email || !password) {
       toast.error("Please fill all fields", {
         position: "top-center",
@@ -33,7 +33,7 @@ export default function AdminLoginPage() {
         position: "top-center",
         autoClose: 2000,
       });
-      
+
       setTimeout(() => {
         router.push("/admin/dashboard");
       }, 1000);
@@ -74,7 +74,7 @@ export default function AdminLoginPage() {
                 <input
                   type="email"
                   placeholder="admin@example.com"
-                  className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                  className="w-full pl-11 pr-4 py-3 border text-gray-700 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -91,7 +91,7 @@ export default function AdminLoginPage() {
                 <input
                   type="password"
                   placeholder="••••••••"
-                  className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                  className="w-full pl-11 pr-4 py-3 border text-gray-700 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required

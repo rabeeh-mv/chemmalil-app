@@ -30,6 +30,8 @@ interface FamilyData {
   houseName: string;
   familyName: string;
   location: string;
+  area?: string;
+  isVerified?: boolean;
   roadName: string;
   address: string;
   members: Member[];
@@ -41,17 +43,6 @@ interface FamilyData {
   totalMembers: number;
   createdAt: string;
   registrationDate: string;
-}
-
-interface UnitData {
-  id: string; // Document ID (usually House ID)
-  houseId: string;
-  houseName: string;
-  guardianName: string;
-  guardianDob: string;
-  guardianAadhaarLast4: string;
-  members: { member_id: string; name: string }[];
-  obligations?: { subcollection: string; amount: string | number }[];
 }
 
 interface UnitData {
@@ -78,7 +69,7 @@ export default function AdminDashboard() {
   const [filteredFamilies, setFilteredFamilies] = useState<FamilyData[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [sortBy, setSortBy] = useState<"familyName" | "location" | "createdAt">("familyName");
+  const [sortBy, setSortBy] = useState<"familyName" | "location" | "createdAt" | "area">("familyName");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [editingFamily, setEditingFamily] = useState<FamilyData | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -133,13 +124,14 @@ export default function AdminDashboard() {
         family.familyName.toLowerCase().includes(searchLower) ||
         family.houseName.toLowerCase().includes(searchLower) ||
         family.location.toLowerCase().includes(searchLower) ||
-        family.primaryMember.name.toLowerCase().includes(searchLower)
+        family.primaryMember.name.toLowerCase().includes(searchLower) ||
+        (family.area || "").toLowerCase().includes(searchLower)
       );
     });
 
     filtered.sort((a, b) => {
-      let aValue: string | number = a[sortBy];
-      let bValue: string | number = b[sortBy];
+      let aValue: string | number | boolean = a[sortBy] || "";
+      let bValue: string | number | boolean = b[sortBy] || "";
 
       if (sortBy === "createdAt") {
         aValue = new Date(a.createdAt).getTime();
@@ -259,7 +251,7 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleSort = (field: "familyName" | "location" | "createdAt") => {
+  const handleSort = (field: "familyName" | "location" | "createdAt" | "area") => {
     if (sortBy === field) {
       setSortOrder(sortOrder === "asc" ? "desc" : "asc");
     } else {
@@ -285,6 +277,8 @@ export default function AdminDashboard() {
         roadName: editingFamily.roadName,
         address: editingFamily.address,
         primaryMember: editingFamily.primaryMember,
+        isVerified: editingFamily.isVerified, // Ensure verfied status is saved if edited (though not in modal yet)
+        area: editingFamily.area // Ensure area is saved if edited
       });
 
       toast.success("Family updated successfully!");
@@ -334,6 +328,8 @@ export default function AdminDashboard() {
       family.familyName,
       family.houseName,
       family.location,
+      family.area || "-",
+      family.isVerified ? "Yes" : "No",
       family.totalMembers.toString(),
       family.primaryMember.name,
       family.primaryMember.phone,
@@ -341,7 +337,7 @@ export default function AdminDashboard() {
     ]);
 
     autoTable(pdf, {
-      head: [["Family Name", "House Name", "Location", "Members", "Contact Person", "Phone", "Reg. Date"]],
+      head: [["Family Name", "House Name", "Location", "Area", "Verified", "Members", "Contact", "Phone", "Reg. Date"]],
       body: tableData,
       startY: 35,
       theme: "striped",
@@ -357,6 +353,8 @@ export default function AdminDashboard() {
       "Family Name": family.familyName,
       "House Name": family.houseName,
       "Location": family.location,
+      "Area": family.area || "-",
+      "Verified": family.isVerified ? "Yes" : "No",
       "Road Name": family.roadName,
       "Address": family.address,
       "Total Members": family.totalMembers,
@@ -405,10 +403,11 @@ export default function AdminDashboard() {
 
             <button
               onClick={handleLogout}
-              className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
+              className="flex items-center gap-2 px-3 py-2 md:px-4 md:py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
+              title="Logout"
             >
               <LogOut className="w-4 h-4" />
-              Logout
+              <span className="hidden md:inline">Logout</span>
             </button>
           </div>
         </div>
@@ -417,10 +416,10 @@ export default function AdminDashboard() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
         {/* Tab Navigation */}
-        <div className="flex space-x-1 mb-8 bg-blue-100 p-1 rounded-xl w-fit">
+        <div className="flex overflow-x-auto pb-4 mb-4 gap-2 no-scrollbar">
           <button
             onClick={() => setActiveTab("families")}
-            className={`px-6 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${activeTab === "families"
+            className={`whitespace-nowrap px-6 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${activeTab === "families"
               ? "bg-white text-blue-600 shadow-sm"
               : "text-blue-600 hover:bg-blue-200"
               }`}
@@ -429,7 +428,7 @@ export default function AdminDashboard() {
           </button>
           <button
             onClick={() => setActiveTab("units")}
-            className={`px-6 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${activeTab === "units"
+            className={`whitespace-nowrap px-6 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${activeTab === "units"
               ? "bg-white text-blue-600 shadow-sm"
               : "text-blue-600 hover:bg-blue-200"
               }`}
@@ -438,7 +437,7 @@ export default function AdminDashboard() {
           </button>
           <button
             onClick={() => setActiveTab("areas")}
-            className={`px-6 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${activeTab === "areas"
+            className={`whitespace-nowrap px-6 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${activeTab === "areas"
               ? "bg-white text-blue-600 shadow-sm"
               : "text-blue-600 hover:bg-blue-200"
               }`}
@@ -450,7 +449,7 @@ export default function AdminDashboard() {
         {activeTab === "families" && (
           <>
             {/* Stats Cards */}
-            <div className="grid md:grid-cols-3 gap-6 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-8">
               <div className="bg-white rounded-xl p-6 shadow-lg">
                 <div className="flex items-center justify-between">
                   <div>
@@ -480,7 +479,7 @@ export default function AdminDashboard() {
               <div className="bg-white rounded-xl p-6 shadow-lg">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-gray-600 mb-1">Average Members/Family</p>
+                    <p className="text-sm text-gray-600 mb-1">Avg Members/Family</p>
                     <p className="text-3xl font-bold text-purple-600">
                       {families.length > 0
                         ? (families.reduce((sum, f) => sum + f.totalMembers, 0) / families.length).toFixed(1)
@@ -498,7 +497,7 @@ export default function AdminDashboard() {
             <div className="bg-white rounded-xl p-6 shadow-lg mb-6">
               <div className="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center">
                 {/* Search */}
-                <div className="relative flex-1 max-w-md">
+                <div className="relative flex-1 w-full md:max-w-md">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                   <input
                     type="text"
@@ -510,17 +509,17 @@ export default function AdminDashboard() {
                 </div>
 
                 {/* Export Buttons */}
-                <div className="flex gap-3">
+                <div className="flex gap-3 w-full md:w-auto overflow-x-auto pb-2 md:pb-0">
                   <button
                     onClick={exportToPDF}
-                    className="flex items-center gap-2 px-4 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
+                    className="flex-shrink-0 flex items-center gap-2 px-4 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition whitespace-nowrap"
                   >
                     <FileText className="w-4 h-4" />
                     Export PDF
                   </button>
                   <button
                     onClick={exportToExcel}
-                    className="flex items-center gap-2 px-4 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition"
+                    className="flex-shrink-0 flex items-center gap-2 px-4 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition whitespace-nowrap"
                   >
                     <Sheet className="w-4 h-4" />
                     Export Excel
@@ -529,8 +528,8 @@ export default function AdminDashboard() {
               </div>
             </div>
 
-            {/* Data Table */}
-            <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+            {/* Desktop Table View */}
+            <div className="hidden md:block bg-white rounded-xl shadow-lg overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
@@ -554,6 +553,16 @@ export default function AdminDashboard() {
                           <ArrowUpDown className="w-4 h-4" />
                         </button>
                       </th>
+                      <th className="px-6 py-4 text-left">
+                        <button
+                          onClick={() => handleSort("area")}
+                          className="flex items-center gap-2 hover:text-blue-200 transition"
+                        >
+                          Area
+                          <ArrowUpDown className="w-4 h-4" />
+                        </button>
+                      </th>
+                      <th className="px-6 py-4 text-center">Verified</th>
                       <th className="px-6 py-4 text-left">Members</th>
                       <th className="px-6 py-4 text-left">Contact Person</th>
                       <th className="px-6 py-4 text-left">Phone</th>
@@ -572,7 +581,7 @@ export default function AdminDashboard() {
                   <tbody className="divide-y divide-gray-200">
                     {filteredFamilies.length === 0 ? (
                       <tr>
-                        <td colSpan={8} className="px-6 py-12 text-center text-gray-500">
+                        <td colSpan={10} className="px-6 py-12 text-center text-gray-500">
                           No families found
                         </td>
                       </tr>
@@ -582,6 +591,22 @@ export default function AdminDashboard() {
                           <td className="px-6 py-4 font-medium text-gray-900">{family.familyName}</td>
                           <td className="px-6 py-4 text-gray-600">{family.houseName}</td>
                           <td className="px-6 py-4 text-gray-600">{family.location}</td>
+                          <td className="px-6 py-4 text-gray-600">{family.area || "-"}</td>
+                          <td className="px-6 py-4 text-center">
+                            {family.isVerified ? (
+                              <div className="flex justify-center">
+                                <div className="bg-green-100 p-1 rounded-full">
+                                  <Check className="w-4 h-4 text-green-600" />
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="flex justify-center">
+                                <div className="bg-gray-100 p-1 rounded-full">
+                                  <X className="w-4 h-4 text-gray-400" />
+                                </div>
+                              </div>
+                            )}
+                          </td>
                           <td className="px-6 py-4">
                             <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
                               {family.totalMembers}
@@ -615,13 +640,81 @@ export default function AdminDashboard() {
                 </table>
               </div>
             </div>
+
+            {/* Mobile Card View */}
+            <div className="md:hidden space-y-4">
+              {filteredFamilies.length === 0 ? (
+                <div className="text-center py-12 text-gray-500 bg-white rounded-xl shadow">
+                  No families found
+                </div>
+              ) : (
+                filteredFamilies.map((family) => (
+                  <div key={family.id} className="bg-white rounded-xl shadow-md p-5 border border-gray-100">
+                    <div className="flex justify-between items-start mb-3">
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="text-lg font-bold text-gray-900">{family.familyName}</h3>
+                          {family.isVerified && (
+                            <span className="bg-green-100 text-green-700 text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">Verified</span>
+                          )}
+                        </div>
+                        <p className="text-sm text-gray-500">{family.houseName}</p>
+                      </div>
+                      <span className="px-2.5 py-1 bg-blue-100 text-blue-700 rounded-lg text-xs font-semibold">
+                        {family.totalMembers} Members
+                      </span>
+                    </div>
+
+                    <div className="space-y-2 text-sm text-gray-600 mb-4">
+                      <div className="flex items-center gap-2">
+                        <span className="w-20 font-medium text-gray-400">Location:</span>
+                        <span>{family.location}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="w-20 font-medium text-gray-400">Area:</span>
+                        <span>{family.area || "N/A"}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="w-20 font-medium text-gray-400">Contact:</span>
+                        <span>{family.primaryMember.name}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="w-20 font-medium text-gray-400">Phone:</span>
+                        <span className="font-mono">{family.primaryMember.phone}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="w-20 font-medium text-gray-400">Reg:</span>
+                        <span>{family.registrationDate}</span>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-3 pt-3 border-t border-gray-100">
+                      <button
+                        onClick={() => handleEdit(family)}
+                        className="flex-1 flex items-center justify-center gap-2 py-2 bg-blue-50 text-blue-600 rounded-lg font-medium text-sm hover:bg-blue-100 transition"
+                      >
+                        <Edit className="w-4 h-4" />
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => handleDelete(family.id, family.familyName)}
+                        className="flex-1 flex items-center justify-center gap-2 py-2 bg-red-50 text-red-600 rounded-lg font-medium text-sm hover:bg-red-100 transition"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
           </>
         )}
 
         {activeTab === "units" && (
           <>
             {/* Units View */}
-            <div className="grid md:grid-cols-3 gap-6 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
               <div className="bg-white rounded-xl p-6 shadow-lg">
                 <div className="flex items-center justify-between">
                   <div>
@@ -638,7 +731,7 @@ export default function AdminDashboard() {
             {/* Controls */}
             <div className="bg-white rounded-xl p-6 shadow-lg mb-6">
               <div className="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center">
-                <div className="relative flex-1 max-w-md">
+                <div className="relative flex-1 w-full md:max-w-md">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                   <input
                     type="text"
@@ -651,8 +744,8 @@ export default function AdminDashboard() {
               </div>
             </div>
 
-            {/* Units Table */}
-            <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+            {/* Desktop Units Table */}
+            <div className="hidden md:block bg-white rounded-xl shadow-lg overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white">
@@ -715,6 +808,63 @@ export default function AdminDashboard() {
                 </table>
               </div>
             </div>
+
+            {/* Mobile Units Card View */}
+            <div className="md:hidden space-y-4">
+              {filteredUnits.length === 0 ? (
+                <div className="text-center py-12 text-gray-500 bg-white rounded-xl shadow">
+                  No units found
+                </div>
+              ) : (
+                filteredUnits.map((unit) => (
+                  <div key={unit.id} className="bg-white rounded-xl shadow-md p-5 border border-gray-100">
+                    <div className="flex justify-between items-start mb-3">
+                      <div>
+                        <div className="text-xs font-bold text-indigo-600 uppercase tracking-wide mb-1">
+                          #{unit.houseId || unit.id}
+                        </div>
+                        <h3 className="text-lg font-bold text-gray-900">{unit.houseName}</h3>
+                      </div>
+                      <span className="px-2.5 py-1 bg-indigo-100 text-indigo-700 rounded-lg text-xs font-semibold">
+                        {unit.members ? unit.members.length : 0} Members
+                      </span>
+                    </div>
+
+                    <div className="space-y-3 mb-4">
+                      <div className="bg-gray-50 p-3 rounded-lg">
+                        <div className="text-xs text-gray-500 mb-1">Guardian</div>
+                        <div className="font-medium text-gray-900">{unit.guardianName}</div>
+                        <div className="text-xs text-gray-400">DOB: {unit.guardianDob || 'N/A'}</div>
+                      </div>
+
+                      <div>
+                        {unit.obligations && unit.obligations.length > 0 ? (
+                          <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-yellow-50 text-yellow-700 rounded-full text-sm font-medium w-full">
+                            <span className="w-2 h-2 rounded-full bg-yellow-400"></span>
+                            {unit.obligations.length} Pending Obligations
+                          </div>
+                        ) : (
+                          <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-green-50 text-green-700 rounded-full text-sm font-medium w-full">
+                            <span className="w-2 h-2 rounded-full bg-green-500"></span>
+                            All Clear
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="pt-3 border-t border-gray-100">
+                      <button
+                        onClick={() => handleDeleteUnit(unit.id)}
+                        className="w-full flex items-center justify-center gap-2 py-2.5 bg-red-50 text-red-600 rounded-lg font-medium text-sm hover:bg-red-100 transition"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                        Delete Unit
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
           </>
         )}
 
@@ -726,7 +876,7 @@ export default function AdminDashboard() {
             {/* Add New Area Form */}
             <form onSubmit={handleAddArea} className="bg-slate-50 p-6 rounded-xl border border-gray-200 mb-8">
               <h3 className="text-lg font-semibold text-gray-700 mb-4">Add New Controller</h3>
-              <div className="grid md:grid-cols-3 gap-4 mb-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-900 mb-1">Area Name</label>
                   <select
@@ -768,14 +918,14 @@ export default function AdminDashboard() {
               <button
                 type="submit"
                 disabled={areaLoading}
-                className="bg-emerald-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-emerald-700 transition disabled:opacity-50"
+                className="w-full md:w-auto bg-emerald-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-emerald-700 transition disabled:opacity-50"
               >
                 {areaLoading ? "Adding..." : "+ Create Account"}
               </button>
             </form>
 
-            {/* List Areas */}
-            <div className="overflow-x-auto">
+            {/* Desktop Areas Table */}
+            <div className="hidden md:block overflow-x-auto">
               <table className="w-full">
                 <thead className="bg-gray-100 text-gray-900">
                   <tr>
@@ -812,6 +962,38 @@ export default function AdminDashboard() {
                 </tbody>
               </table>
             </div>
+
+            {/* Mobile Areas Card View */}
+            <div className="md:hidden space-y-4">
+              {areaAccounts.length === 0 ? (
+                <div className="text-center py-8 text-gray-500 border border-dashed border-gray-300 rounded-lg">
+                  No area controllers added yet.
+                </div>
+              ) : (
+                areaAccounts.map((account) => (
+                  <div key={account.id} className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm relative">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h4 className="font-bold text-gray-900 text-lg">{account.area}</h4>
+                        <div className="text-sm text-gray-600 mt-1">
+                          Head: <span className="font-medium text-gray-800">{account.headPersonName}</span>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => handleDeleteArea(account.id, account.area)}
+                        className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                    <div className="mt-3 bg-gray-50 px-3 py-2 rounded border border-gray-100 flex items-center gap-2">
+                      <span className="text-xs text-gray-500 uppercase tracking-wider font-semibold">Password:</span>
+                      <span className="font-mono text-gray-800 font-medium">{account.password}</span>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
         )}
 
@@ -821,7 +1003,7 @@ export default function AdminDashboard() {
       {
         showEditModal && editingFamily && (
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-8">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-5 md:p-8">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-bold text-gray-900">Edit Family Details</h2>
                 <button
