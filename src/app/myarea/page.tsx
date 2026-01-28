@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { db } from "@/app/lib/firebase";
-import { collection, query, where, getDocs, updateDoc, doc } from "firebase/firestore";
-import { CheckCircle, LogIn, MapPin, User, Loader2 } from "lucide-react";
+import { collection, query, where, getDocs, updateDoc, deleteDoc, doc } from "firebase/firestore";
+import { CheckCircle, LogIn, MapPin, User, Loader2, Eye, Trash2, Edit2, X } from "lucide-react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -95,34 +95,54 @@ export default function AreaPortal() {
             toast.success("Family verified successfully");
             // Remove from local list
             setPendingFamilies(prev => prev.filter(f => f.id !== familyId));
+            // Close modal if verifying from details view
+            if (selectedFamily?.id === familyId) {
+                setSelectedFamily(null);
+                setIsEditing(false);
+            }
         } catch (error) {
             console.error("Verification Error:", error);
             toast.error("Failed to verify family");
         }
     };
 
+    // --- Delete Logic ---
+    const handleDelete = async (familyId: string, familyName: string) => {
+        if (!confirm(`Are you sure you want to PERMANENTLY DELETE the request for ${familyName}? This action cannot be undone.`)) return;
+
+        try {
+            await deleteDoc(doc(db, "families", familyId));
+            toast.success("Request deleted successfully");
+            setPendingFamilies(prev => prev.filter(f => f.id !== familyId));
+        } catch (error) {
+            console.error("Delete Error:", error);
+            toast.error("Failed to delete request");
+        }
+    };
+
     // --- Update Logic ---
-    const [editingFamily, setEditingFamily] = useState<any>(null);
+    const [selectedFamily, setSelectedFamily] = useState<any>(null);
+    const [isEditing, setIsEditing] = useState(false);
 
     const handleUpdateFamily = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!editingFamily) return;
+        if (!selectedFamily) return;
         setLoading(true);
 
         try {
-            const familyRef = doc(db, "families", editingFamily.id);
+            const familyRef = doc(db, "families", selectedFamily.id);
             // Create a clean copy associated with the state to avoid reference issues
-            const updatedData = { ...editingFamily };
+            const updatedData = { ...selectedFamily };
             delete updatedData.id; // Don't save ID into the document
 
             await updateDoc(familyRef, updatedData);
 
             toast.success("Family details updated successfully");
-            setEditingFamily(null);
+            setIsEditing(false); // Switch back to view mode
 
             // Refresh local data
             setPendingFamilies(prev =>
-                prev.map(f => f.id === editingFamily.id ? editingFamily : f)
+                prev.map(f => f.id === selectedFamily.id ? selectedFamily : f)
             );
         } catch (error) {
             console.error("Update Error:", error);
@@ -133,10 +153,10 @@ export default function AreaPortal() {
     };
 
     const handleMemberChange = (index: number, field: string, value: string) => {
-        if (!editingFamily) return;
-        const updatedMembers = [...editingFamily.members];
+        if (!selectedFamily) return;
+        const updatedMembers = [...selectedFamily.members];
         updatedMembers[index] = { ...updatedMembers[index], [field]: value };
-        setEditingFamily({ ...editingFamily, members: updatedMembers });
+        setSelectedFamily({ ...selectedFamily, members: updatedMembers });
     };
 
     // --- Views ---
@@ -227,7 +247,7 @@ export default function AreaPortal() {
                     </button>
                 </div>
 
-                {loading && !editingFamily ? (
+                {loading && !selectedFamily ? (
                     <div className="flex justify-center py-12">
                         <Loader2 className="animate-spin w-8 h-8 text-emerald-600" />
                     </div>
@@ -276,19 +296,22 @@ export default function AreaPortal() {
                                     )}
 
                                     <div className="flex gap-2">
-                                        {/* Edit Button */}
+                                        {/* View Button */}
                                         <button
-                                            onClick={() => setEditingFamily(family)}
-                                            className="flex-1 border border-emerald-600 text-emerald-600 py-2 rounded-lg font-medium hover:bg-emerald-50 transition"
+                                            onClick={() => {
+                                                setSelectedFamily(family);
+                                                setIsEditing(false);
+                                            }}
+                                            className="flex-1 bg-white border border-emerald-600 text-emerald-600 py-2 rounded-lg font-medium hover:bg-emerald-50 transition flex items-center justify-center"
                                         >
-                                            Edit
+                                            <Eye className="w-4 h-4 mr-2" /> View
                                         </button>
-                                        {/* Verify Button */}
+                                        {/* Delete Button */}
                                         <button
-                                            onClick={() => confirmFamily(family.id, family.familyName)}
-                                            className="flex-1 bg-emerald-600 text-white py-2 rounded-lg font-medium hover:bg-emerald-700 transition flex items-center justify-center"
+                                            onClick={() => handleDelete(family.id, family.familyName)}
+                                            className="flex-1 bg-white border border-red-500 text-red-500 py-2 rounded-lg font-medium hover:bg-red-50 transition flex items-center justify-center"
                                         >
-                                            <CheckCircle className="w-4 h-4 mr-2" /> Verify
+                                            <Trash2 className="w-4 h-4 mr-2" /> Delete
                                         </button>
                                     </div>
                                 </div>
@@ -297,274 +320,362 @@ export default function AreaPortal() {
                     </div>
                 )}
 
-                {/* Edit Modal */}
-                {editingFamily && (
+                {/* Details/Edit Modal */}
+                {selectedFamily && (
                     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 overflow-y-auto">
                         <div className="bg-white rounded-2xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto m-4">
                             <div className="sticky top-0 bg-white p-6 border-b flex justify-between items-center z-10">
-                                <h2 className="text-xl font-bold text-gray-800">Edit Family Details</h2>
-                                <button onClick={() => setEditingFamily(null)} className="p-2 hover:bg-gray-100 rounded-full">✕</button>
+                                <h2 className="text-xl font-bold text-gray-800">
+                                    {isEditing ? "Edit Family Details" : "Family Details Verification"}
+                                </h2>
+                                <button
+                                    onClick={() => { setSelectedFamily(null); setIsEditing(false); }}
+                                    className="p-2 hover:bg-gray-100 rounded-full"
+                                >
+                                    <X className="w-6 h-6 text-gray-500" />
+                                </button>
                             </div>
 
-                            <form onSubmit={handleUpdateFamily} className="p-6 space-y-8">
-                                {/* House Details */}
-                                <section>
-                                    <h3 className="text-lg font-semibold text-gray-700 mb-4 pb-2 border-b">House Information</h3>
-                                    <div className="grid md:grid-cols-2 gap-4">
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-900 mb-1">Family Name</label>
-                                            <input
-                                                type="text"
-                                                className="w-full p-2 border rounded focus:ring-2 focus:ring-emerald-500 outline-none"
-                                                value={editingFamily.familyName}
-                                                onChange={(e) => setEditingFamily({ ...editingFamily, familyName: e.target.value })}
-                                                required
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-900 mb-1">House Name</label>
-                                            <input
-                                                type="text"
-                                                className="w-full p-2 border rounded focus:ring-2 focus:ring-emerald-500 outline-none"
-                                                value={editingFamily.houseName}
-                                                onChange={(e) => setEditingFamily({ ...editingFamily, houseName: e.target.value })}
-                                                required
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-900 mb-1">Location / Place</label>
-                                            <input
-                                                type="text"
-                                                className="w-full p-2 border rounded focus:ring-2 focus:ring-emerald-500 outline-none"
-                                                value={editingFamily.location}
-                                                onChange={(e) => setEditingFamily({ ...editingFamily, location: e.target.value })}
-                                                required
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-900 mb-1">Locality (Selection)</label>
-                                            <select
-                                                className="w-full p-2 border rounded focus:ring-2 focus:ring-emerald-500 outline-none"
-                                                value={editingFamily.locality || ""}
-                                                onChange={(e) => setEditingFamily({ ...editingFamily, locality: e.target.value })}
-                                            >
-                                                <option value="">Select Locality</option>
-                                                <option value="Ramanatukara">Ramanatukara</option>
-                                                <option value="Pullumkunn">Pullumkunn</option>
-                                                <option value="Idimuyikkal">Idimuyikkal</option>
-                                                <option value="Other">Other</option>
-                                            </select>
-                                        </div>
-                                        <div className="md:col-span-2">
-                                            <label className="block text-sm font-medium text-gray-900 mb-1">Full Address</label>
-                                            <textarea
-                                                className="w-full p-2 border rounded focus:ring-2 focus:ring-emerald-500 outline-none"
-                                                rows={2}
-                                                value={editingFamily.address}
-                                                onChange={(e) => setEditingFamily({ ...editingFamily, address: e.target.value })}
-                                                required
-                                            />
-                                        </div>
-                                    </div>
-                                </section>
-
-                                {/* Members List */}
-                                <section>
-                                    <h3 className="text-lg font-semibold text-gray-700 mb-4 pb-2 border-b">Members ({editingFamily.members?.length || 0})</h3>
-                                    <div className="space-y-6">
-                                        {editingFamily.members?.map((member: any, index: number) => (
-                                            <div key={index} className="bg-slate-50 p-4 rounded-lg border border-gray-200">
-                                                <div className="flex justify-between items-center mb-3">
-                                                    <span className="font-semibold text-gray-700">
-                                                        #{index + 1} {member.isGuardian ? <span className="bg-emerald-100 text-emerald-800 text-xs px-2 py-0.5 rounded ml-2">Guardian</span> : <span className="text-gray-500 text-sm ml-2">({member.relation})</span>}
-                                                    </span>
-                                                </div>
-
-                                                {/* Personal Basics */}
-                                                <div className="grid md:grid-cols-4 gap-3 mb-3">
-                                                    <div className="col-span-2 md:col-span-1">
-                                                        <label className="block text-xs font-medium text-gray-900 mb-1">First Name</label>
-                                                        <input
-                                                            type="text"
-                                                            className="w-full p-2 text-sm border rounded focus:ring-1 focus:ring-emerald-500 outline-none"
-                                                            value={member.fullName || ""}
-                                                            onChange={(e) => handleMemberChange(index, 'fullName', e.target.value)}
-                                                        />
-                                                    </div>
-                                                    <div className="col-span-2 md:col-span-1">
-                                                        <label className="block text-xs font-medium text-gray-900 mb-1">Surname</label>
-                                                        <input
-                                                            type="text"
-                                                            className="w-full p-2 text-sm border rounded focus:ring-1 focus:ring-emerald-500 outline-none"
-                                                            value={member.surname || ""}
-                                                            onChange={(e) => handleMemberChange(index, 'surname', e.target.value)}
-                                                        />
-                                                    </div>
-                                                    <div>
-                                                        <label className="block text-xs font-medium text-gray-900 mb-1">Date of Birth</label>
-                                                        <input
-                                                            type="date"
-                                                            className="w-full p-2 text-sm border rounded focus:ring-1 focus:ring-emerald-500 outline-none"
-                                                            value={member.dob || ""}
-                                                            onChange={(e) => handleMemberChange(index, 'dob', e.target.value)}
-                                                        />
-                                                    </div>
-                                                    <div>
-                                                        <label className="block text-xs font-medium text-gray-900 mb-1">Relation</label>
-                                                        <input
-                                                            type="text"
-                                                            className="w-full p-2 text-sm border rounded focus:ring-1 focus:ring-emerald-500 outline-none"
-                                                            value={member.relation || (member.isGuardian ? "Head" : "")}
-                                                            onChange={(e) => handleMemberChange(index, 'relation', e.target.value)}
-                                                            disabled={member.isGuardian}
-                                                        />
-                                                    </div>
-                                                </div>
-
-                                                {/* Contact & ID (Mainly for Guardian) */}
-                                                <div className="grid md:grid-cols-3 gap-3 mb-3">
-                                                    <div>
-                                                        <label className="block text-xs font-medium text-gray-900 mb-1">Phone</label>
-                                                        <input
-                                                            type="text"
-                                                            className="w-full p-2 text-sm border rounded focus:ring-1 focus:ring-emerald-500 outline-none"
-                                                            value={member.phone || ""}
-                                                            onChange={(e) => handleMemberChange(index, 'phone', e.target.value)}
-                                                            placeholder={!member.isGuardian ? "Optional" : ""}
-                                                        />
-                                                    </div>
-                                                    <div>
-                                                        <label className="block text-xs font-medium text-gray-900 mb-1">Aadhaar (Last 4)</label>
-                                                        <input
-                                                            type="text"
-                                                            maxLength={4}
-                                                            className="w-full p-2 text-sm border rounded focus:ring-1 focus:ring-emerald-500 outline-none"
-                                                            value={member.aadhaar || ""}
-                                                            onChange={(e) => handleMemberChange(index, 'aadhaar', e.target.value)}
-                                                        />
-                                                    </div>
-                                                    {member.isGuardian && (
-                                                        <div>
-                                                            <label className="block text-xs font-medium text-gray-900 mb-1">WhatsApp</label>
-                                                            <input
-                                                                type="text"
-                                                                className="w-full p-2 text-sm border rounded focus:ring-1 focus:ring-emerald-500 outline-none"
-                                                                value={member.whatsapp || ""}
-                                                                onChange={(e) => handleMemberChange(index, 'whatsapp', e.target.value)}
-                                                            />
-                                                        </div>
-                                                    )}
-                                                </div>
-
-                                                {/* Parents Details */}
-                                                <div className="grid md:grid-cols-4 gap-3 mb-3 bg-white p-2 rounded border border-gray-100">
-                                                    <div>
-                                                        <label className="block text-xs font-medium text-gray-900 mb-1">Father's Name</label>
-                                                        <input
-                                                            type="text"
-                                                            className="w-full p-1.5 text-sm border rounded focus:ring-1 focus:ring-emerald-500 outline-none bg-gray-50"
-                                                            value={member.fatherName || ""}
-                                                            onChange={(e) => handleMemberChange(index, 'fatherName', e.target.value)}
-                                                        />
-                                                    </div>
-                                                    <div>
-                                                        <label className="block text-xs font-medium text-gray-900 mb-1">Father's Surname</label>
-                                                        <input
-                                                            type="text"
-                                                            className="w-full p-1.5 text-sm border rounded focus:ring-1 focus:ring-emerald-500 outline-none bg-gray-50"
-                                                            value={member.fatherSurname || ""}
-                                                            onChange={(e) => handleMemberChange(index, 'fatherSurname', e.target.value)}
-                                                        />
-                                                    </div>
-                                                    <div>
-                                                        <label className="block text-xs font-medium text-gray-900 mb-1">Mother's Name</label>
-                                                        <input
-                                                            type="text"
-                                                            className="w-full p-1.5 text-sm border rounded focus:ring-1 focus:ring-emerald-500 outline-none bg-gray-50"
-                                                            value={member.motherName || ""}
-                                                            onChange={(e) => handleMemberChange(index, 'motherName', e.target.value)}
-                                                        />
-                                                    </div>
-                                                    <div>
-                                                        <label className="block text-xs font-medium text-gray-900 mb-1">Mother's Surname</label>
-                                                        <input
-                                                            type="text"
-                                                            className="w-full p-1.5 text-sm border rounded focus:ring-1 focus:ring-emerald-500 outline-none bg-gray-50"
-                                                            value={member.motherSurname || ""}
-                                                            onChange={(e) => handleMemberChange(index, 'motherSurname', e.target.value)}
-                                                        />
-                                                    </div>
-                                                </div>
-
-                                                {/* Marital Status & Extra */}
-                                                <div className="grid md:grid-cols-2 gap-3">
-                                                    <div className="flex items-center space-x-2 pt-4">
-                                                        <input
-                                                            type="checkbox"
-                                                            id={`married-${index}`}
-                                                            checked={member.isMarried || false}
-                                                            onChange={(e) => handleMemberChange(index, 'isMarried', e.target.checked as any)} // Cast for boolean handling fix if needed
-                                                            className="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500"
-                                                        />
-                                                        <label htmlFor={`married-${index}`} className="text-sm text-gray-700">Married</label>
-                                                    </div>
-                                                    {member.isMarried && (
-                                                        <div className="grid grid-cols-2 gap-2">
-                                                            <div>
-                                                                <label className="block text-xs font-medium text-gray-900 mb-1">Spouse Name</label>
-                                                                <input
-                                                                    type="text"
-                                                                    className="w-full p-2 text-sm border rounded"
-                                                                    value={member.spouseName || ""}
-                                                                    onChange={(e) => handleMemberChange(index, 'spouseName', e.target.value)}
-                                                                />
-                                                            </div>
-                                                            <div>
-                                                                <label className="block text-xs font-medium text-gray-900 mb-1">Spouse Surname</label>
-                                                                <input
-                                                                    type="text"
-                                                                    className="w-full p-2 text-sm border rounded"
-                                                                    value={member.spouseSurname || ""}
-                                                                    onChange={(e) => handleMemberChange(index, 'spouseSurname', e.target.value)}
-                                                                />
-                                                            </div>
-                                                        </div>
-                                                    )}
-                                                    {member.isGuardian && (
-                                                        <div className="col-span-2">
-                                                            <label className="block text-xs font-medium text-gray-900 mb-1">Grandfather Name</label>
-                                                            <input
-                                                                type="text"
-                                                                className="w-full p-2 text-sm border rounded focus:ring-1 focus:ring-emerald-500 outline-none"
-                                                                value={member.grandFatherName || ""}
-                                                                onChange={(e) => handleMemberChange(index, 'grandFatherName', e.target.value)}
-                                                            />
-                                                        </div>
-                                                    )}
-                                                </div>
-
+                            {/* --- READ-ONLY VIEW --- */}
+                            {!isEditing ? (
+                                <div className="p-6 space-y-8">
+                                    {/* Family Info */}
+                                    <section>
+                                        <h3 className="text-lg font-semibold text-gray-700 mb-4 pb-2 border-b">House Information</h3>
+                                        <div className="grid md:grid-cols-2 gap-y-4 gap-x-8 text-sm">
+                                            <div>
+                                                <p className="text-gray-500 mb-1">Family Name</p>
+                                                <p className="font-semibold text-gray-900">{selectedFamily.familyName}</p>
                                             </div>
-                                        ))}
-                                    </div>
-                                </section>
+                                            <div>
+                                                <p className="text-gray-500 mb-1">House Name</p>
+                                                <p className="font-semibold text-gray-900">{selectedFamily.houseName}</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-gray-500 mb-1">Locality</p>
+                                                <p className="font-semibold text-gray-900">{selectedFamily.locality || "N/A"}</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-gray-500 mb-1">Place / Location</p>
+                                                <p className="font-semibold text-gray-900">{selectedFamily.location}</p>
+                                            </div>
+                                            <div className="md:col-span-2">
+                                                <p className="text-gray-500 mb-1">Full Address</p>
+                                                <p className="font-semibold text-gray-900">{selectedFamily.address}</p>
+                                            </div>
+                                        </div>
+                                    </section>
 
-                                <div className="flex gap-4 pt-4 border-t sticky bottom-0 bg-white p-4 -mx-6 -mb-6 rounded-b-2xl shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
-                                    <button
-                                        type="button"
-                                        onClick={() => setEditingFamily(null)}
-                                        className="flex-1 py-3 border border-gray-300 rounded-lg font-medium text-gray-700 hover:bg-gray-50 transition"
-                                    >
-                                        Cancel
-                                    </button>
-                                    <button
-                                        type="submit"
-                                        disabled={loading}
-                                        className="flex-1 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 transition"
-                                    >
-                                        {loading ? "Saving..." : "Save Changes"}
-                                    </button>
+                                    {/* Members List Read-Only */}
+                                    <section>
+                                        <h3 className="text-lg font-semibold text-gray-700 mb-4 pb-2 border-b">
+                                            Members ({selectedFamily.members?.length || 0})
+                                        </h3>
+                                        <div className="space-y-4">
+                                            {selectedFamily.members?.map((member: any, index: number) => (
+                                                <div key={index} className="bg-slate-50 p-4 rounded-lg border border-gray-200">
+                                                    <div className="flex justify-between items-center mb-2">
+                                                        <span className="font-bold text-gray-800">
+                                                            #{index + 1} {member.fullName} {member.surname}
+                                                        </span>
+                                                        {member.isGuardian && (
+                                                            <span className="bg-emerald-100 text-emerald-800 text-xs px-2 py-0.5 rounded font-medium">Guardian</span>
+                                                        )}
+                                                    </div>
+                                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs text-gray-600">
+                                                        <div><span className="block text-gray-400">DOB:</span> {member.dob || "N/A"}</div>
+                                                        <div><span className="block text-gray-400">Relation:</span> {member.relation || (member.isGuardian ? "Head" : "N/A")}</div>
+                                                        <div><span className="block text-gray-400">Mobile:</span> {member.phone || "N/A"}</div>
+                                                        <div><span className="block text-gray-400">Aadhaar:</span> {member.aadhaar || "N/A"}</div>
+                                                        <div><span className="block text-gray-400">Father:</span> {member.fatherName}</div>
+                                                        <div><span className="block text-gray-400">Mother:</span> {member.motherName}</div>
+                                                        {member.isMarried && (
+                                                            <div className="col-span-2"><span className="block text-gray-400">Spouse:</span> {member.spouseName}</div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </section>
+
+                                    {/* Action Buttons */}
+                                    <div className="flex gap-4 pt-4 border-t sticky bottom-0 bg-white p-4 -mx-6 -mb-6 rounded-b-2xl shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
+                                        <button
+                                            onClick={() => setIsEditing(true)}
+                                            className="flex-1 py-3 border border-emerald-600 text-emerald-600 rounded-lg font-medium hover:bg-emerald-50 transition flex items-center justify-center gap-2"
+                                        >
+                                            <Edit2 className="w-4 h-4" /> Edit Details
+                                        </button>
+                                        <button
+                                            onClick={() => confirmFamily(selectedFamily.id, selectedFamily.familyName)}
+                                            className="flex-1 bg-emerald-600 text-white py-3 rounded-lg font-semibold hover:bg-emerald-700 transition flex items-center justify-center gap-2"
+                                        >
+                                            <CheckCircle className="w-4 h-4" /> Verify
+                                        </button>
+                                    </div>
                                 </div>
-                            </form>
+                            ) : (
+                                /* --- EDIT MODE (Existing Form) --- */
+                                <form onSubmit={handleUpdateFamily} className="p-6 space-y-8">
+                                    {/* House Details */}
+                                    <section>
+                                        <h3 className="text-lg font-semibold text-gray-700 mb-4 pb-2 border-b">House Information</h3>
+                                        <div className="grid md:grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-900 mb-1">Family Name</label>
+                                                <input
+                                                    type="text"
+                                                    className="w-full p-2 border rounded focus:ring-2 focus:ring-emerald-500 outline-none"
+                                                    value={selectedFamily.familyName}
+                                                    onChange={(e) => setSelectedFamily({ ...selectedFamily, familyName: e.target.value })}
+                                                    required
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-900 mb-1">House Name</label>
+                                                <input
+                                                    type="text"
+                                                    className="w-full p-2 border rounded focus:ring-2 focus:ring-emerald-500 outline-none"
+                                                    value={selectedFamily.houseName}
+                                                    onChange={(e) => setSelectedFamily({ ...selectedFamily, houseName: e.target.value })}
+                                                    required
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-900 mb-1">Location / Place</label>
+                                                <input
+                                                    type="text"
+                                                    className="w-full p-2 border rounded focus:ring-2 focus:ring-emerald-500 outline-none"
+                                                    value={selectedFamily.location}
+                                                    onChange={(e) => setSelectedFamily({ ...selectedFamily, location: e.target.value })}
+                                                    required
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-900 mb-1">Locality (Selection)</label>
+                                                <select
+                                                    className="w-full p-2 border rounded focus:ring-2 focus:ring-emerald-500 outline-none"
+                                                    value={selectedFamily.locality || ""}
+                                                    onChange={(e) => setSelectedFamily({ ...selectedFamily, locality: e.target.value })}
+                                                >
+                                                    <option value="">Select Locality</option>
+                                                    <option value="Ramanatukara">Ramanatukara</option>
+                                                    <option value="Pullumkunn">Pullumkunn</option>
+                                                    <option value="Idimuyikkal">Idimuyikkal</option>
+                                                    <option value="Other">Other</option>
+                                                </select>
+                                            </div>
+                                            <div className="md:col-span-2">
+                                                <label className="block text-sm font-medium text-gray-900 mb-1">Full Address</label>
+                                                <textarea
+                                                    className="w-full p-2 border rounded focus:ring-2 focus:ring-emerald-500 outline-none"
+                                                    rows={2}
+                                                    value={selectedFamily.address}
+                                                    onChange={(e) => setSelectedFamily({ ...selectedFamily, address: e.target.value })}
+                                                    required
+                                                />
+                                            </div>
+                                        </div>
+                                    </section>
+
+                                    {/* Members List */}
+                                    <section>
+                                        <h3 className="text-lg font-semibold text-gray-700 mb-4 pb-2 border-b">Members ({selectedFamily.members?.length || 0})</h3>
+                                        <div className="space-y-6">
+                                            {selectedFamily.members?.map((member: any, index: number) => (
+                                                <div key={index} className="bg-slate-50 p-4 rounded-lg border border-gray-200">
+                                                    <div className="flex justify-between items-center mb-3">
+                                                        <span className="font-semibold text-gray-700">
+                                                            #{index + 1} {member.isGuardian ? <span className="bg-emerald-100 text-emerald-800 text-xs px-2 py-0.5 rounded ml-2">Guardian</span> : <span className="text-gray-500 text-sm ml-2">({member.relation})</span>}
+                                                        </span>
+                                                    </div>
+
+                                                    {/* Personal Basics */}
+                                                    <div className="grid md:grid-cols-4 gap-3 mb-3">
+                                                        <div className="col-span-2 md:col-span-1">
+                                                            <label className="block text-xs font-medium text-gray-900 mb-1">First Name</label>
+                                                            <input
+                                                                type="text"
+                                                                className="w-full p-2 text-sm border rounded focus:ring-1 focus:ring-emerald-500 outline-none"
+                                                                value={member.fullName || ""}
+                                                                onChange={(e) => handleMemberChange(index, 'fullName', e.target.value)}
+                                                            />
+                                                        </div>
+                                                        <div className="col-span-2 md:col-span-1">
+                                                            <label className="block text-xs font-medium text-gray-900 mb-1">Surname</label>
+                                                            <input
+                                                                type="text"
+                                                                className="w-full p-2 text-sm border rounded focus:ring-1 focus:ring-emerald-500 outline-none"
+                                                                value={member.surname || ""}
+                                                                onChange={(e) => handleMemberChange(index, 'surname', e.target.value)}
+                                                            />
+                                                        </div>
+                                                        <div>
+                                                            <label className="block text-xs font-medium text-gray-900 mb-1">Date of Birth</label>
+                                                            <input
+                                                                type="date"
+                                                                className="w-full p-2 text-sm border rounded focus:ring-1 focus:ring-emerald-500 outline-none"
+                                                                value={member.dob || ""}
+                                                                onChange={(e) => handleMemberChange(index, 'dob', e.target.value)}
+                                                            />
+                                                        </div>
+                                                        <div>
+                                                            <label className="block text-xs font-medium text-gray-900 mb-1">Relation</label>
+                                                            <input
+                                                                type="text"
+                                                                className="w-full p-2 text-sm border rounded focus:ring-1 focus:ring-emerald-500 outline-none"
+                                                                value={member.relation || (member.isGuardian ? "Head" : "")}
+                                                                onChange={(e) => handleMemberChange(index, 'relation', e.target.value)}
+                                                                disabled={member.isGuardian}
+                                                            />
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Contact & ID (Mainly for Guardian) */}
+                                                    <div className="grid md:grid-cols-3 gap-3 mb-3">
+                                                        <div>
+                                                            <label className="block text-xs font-medium text-gray-900 mb-1">Phone</label>
+                                                            <input
+                                                                type="text"
+                                                                className="w-full p-2 text-sm border rounded focus:ring-1 focus:ring-emerald-500 outline-none"
+                                                                value={member.phone || ""}
+                                                                onChange={(e) => handleMemberChange(index, 'phone', e.target.value)}
+                                                                placeholder={!member.isGuardian ? "Optional" : ""}
+                                                            />
+                                                        </div>
+                                                        <div>
+                                                            <label className="block text-xs font-medium text-gray-900 mb-1">Aadhaar (Last 4)</label>
+                                                            <input
+                                                                type="text"
+                                                                maxLength={4}
+                                                                className="w-full p-2 text-sm border rounded focus:ring-1 focus:ring-emerald-500 outline-none"
+                                                                value={member.aadhaar || ""}
+                                                                onChange={(e) => handleMemberChange(index, 'aadhaar', e.target.value)}
+                                                            />
+                                                        </div>
+                                                        {member.isGuardian && (
+                                                            <div>
+                                                                <label className="block text-xs font-medium text-gray-900 mb-1">WhatsApp</label>
+                                                                <input
+                                                                    type="text"
+                                                                    className="w-full p-2 text-sm border rounded focus:ring-1 focus:ring-emerald-500 outline-none"
+                                                                    value={member.whatsapp || ""}
+                                                                    onChange={(e) => handleMemberChange(index, 'whatsapp', e.target.value)}
+                                                                />
+                                                            </div>
+                                                        )}
+                                                    </div>
+
+                                                    {/* Parents Details */}
+                                                    <div className="grid md:grid-cols-4 gap-3 mb-3 bg-white p-2 rounded border border-gray-100">
+                                                        <div>
+                                                            <label className="block text-xs font-medium text-gray-900 mb-1">Father's Name</label>
+                                                            <input
+                                                                type="text"
+                                                                className="w-full p-1.5 text-sm border rounded focus:ring-1 focus:ring-emerald-500 outline-none bg-gray-50"
+                                                                value={member.fatherName || ""}
+                                                                onChange={(e) => handleMemberChange(index, 'fatherName', e.target.value)}
+                                                            />
+                                                        </div>
+                                                        <div>
+                                                            <label className="block text-xs font-medium text-gray-900 mb-1">Father's Surname</label>
+                                                            <input
+                                                                type="text"
+                                                                className="w-full p-1.5 text-sm border rounded focus:ring-1 focus:ring-emerald-500 outline-none bg-gray-50"
+                                                                value={member.fatherSurname || ""}
+                                                                onChange={(e) => handleMemberChange(index, 'fatherSurname', e.target.value)}
+                                                            />
+                                                        </div>
+                                                        <div>
+                                                            <label className="block text-xs font-medium text-gray-900 mb-1">Mother's Name</label>
+                                                            <input
+                                                                type="text"
+                                                                className="w-full p-1.5 text-sm border rounded focus:ring-1 focus:ring-emerald-500 outline-none bg-gray-50"
+                                                                value={member.motherName || ""}
+                                                                onChange={(e) => handleMemberChange(index, 'motherName', e.target.value)}
+                                                            />
+                                                        </div>
+                                                        <div>
+                                                            <label className="block text-xs font-medium text-gray-900 mb-1">Mother's Surname</label>
+                                                            <input
+                                                                type="text"
+                                                                className="w-full p-1.5 text-sm border rounded focus:ring-1 focus:ring-emerald-500 outline-none bg-gray-50"
+                                                                value={member.motherSurname || ""}
+                                                                onChange={(e) => handleMemberChange(index, 'motherSurname', e.target.value)}
+                                                            />
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Marital Status & Extra */}
+                                                    <div className="grid md:grid-cols-2 gap-3">
+                                                        <div className="flex items-center space-x-2 pt-4">
+                                                            <input
+                                                                type="checkbox"
+                                                                id={`married-${index}`}
+                                                                checked={member.isMarried || false}
+                                                                onChange={(e) => handleMemberChange(index, 'isMarried', e.target.checked as any)}
+                                                                className="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500"
+                                                            />
+                                                            <label htmlFor={`married-${index}`} className="text-sm text-gray-700">Married</label>
+                                                        </div>
+                                                        {member.isMarried && (
+                                                            <div className="grid grid-cols-2 gap-2">
+                                                                <div>
+                                                                    <label className="block text-xs font-medium text-gray-900 mb-1">Spouse Name</label>
+                                                                    <input
+                                                                        type="text"
+                                                                        className="w-full p-2 text-sm border rounded"
+                                                                        value={member.spouseName || ""}
+                                                                        onChange={(e) => handleMemberChange(index, 'spouseName', e.target.value)}
+                                                                    />
+                                                                </div>
+                                                                <div>
+                                                                    <label className="block text-xs font-medium text-gray-900 mb-1">Spouse Surname</label>
+                                                                    <input
+                                                                        type="text"
+                                                                        className="w-full p-2 text-sm border rounded"
+                                                                        value={member.spouseSurname || ""}
+                                                                        onChange={(e) => handleMemberChange(index, 'spouseSurname', e.target.value)}
+                                                                    />
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                        {member.isGuardian && (
+                                                            <div className="col-span-2">
+                                                                <label className="block text-xs font-medium text-gray-900 mb-1">Grandfather Name</label>
+                                                                <input
+                                                                    type="text"
+                                                                    className="w-full p-2 text-sm border rounded focus:ring-1 focus:ring-emerald-500 outline-none"
+                                                                    value={member.grandFatherName || ""}
+                                                                    onChange={(e) => handleMemberChange(index, 'grandFatherName', e.target.value)}
+                                                                />
+                                                            </div>
+                                                        )}
+                                                    </div>
+
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </section>
+
+                                    <div className="flex gap-4 pt-4 border-t sticky bottom-0 bg-white p-4 -mx-6 -mb-6 rounded-b-2xl shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
+                                        <button
+                                            type="button"
+                                            onClick={() => setIsEditing(false)}
+                                            className="flex-1 py-3 border border-gray-300 rounded-lg font-medium text-gray-700 hover:bg-gray-50 transition"
+                                        >
+                                            Cancel Editing
+                                        </button>
+                                        <button
+                                            type="submit"
+                                            disabled={loading}
+                                            className="flex-1 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 transition"
+                                        >
+                                            {loading ? "Saving..." : "Save Changes"}
+                                        </button>
+                                    </div>
+                                </form>
+                            )}
                         </div>
                     </div>
                 )}
