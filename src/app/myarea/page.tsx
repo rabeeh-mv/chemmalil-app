@@ -425,7 +425,7 @@ export default function AreaPortal() {
                                                 <label className="block text-sm font-medium text-gray-900 mb-1">Family Name</label>
                                                 <input
                                                     type="text"
-                                                    className="w-full p-2 border rounded focus:ring-2 focus:ring-emerald-500 outline-none"
+                                                    className="w-full text-gray-700 p-2 border rounded focus:ring-2 focus:ring-emerald-500 outline-none"
                                                     value={selectedFamily.familyName}
                                                     onChange={(e) => setSelectedFamily({ ...selectedFamily, familyName: e.target.value })}
                                                     required
@@ -435,7 +435,7 @@ export default function AreaPortal() {
                                                 <label className="block text-sm font-medium text-gray-900 mb-1">House Name</label>
                                                 <input
                                                     type="text"
-                                                    className="w-full p-2 border rounded focus:ring-2 focus:ring-emerald-500 outline-none"
+                                                    className="w-full p-2 border text-gray-700 rounded focus:ring-2 focus:ring-emerald-500 outline-none"
                                                     value={selectedFamily.houseName}
                                                     onChange={(e) => setSelectedFamily({ ...selectedFamily, houseName: e.target.value })}
                                                     required
@@ -445,7 +445,7 @@ export default function AreaPortal() {
                                                 <label className="block text-sm font-medium text-gray-900 mb-1">Location / Place</label>
                                                 <input
                                                     type="text"
-                                                    className="w-full p-2 border rounded focus:ring-2 focus:ring-emerald-500 outline-none"
+                                                    className="w-full p-2 border text-gray-700 rounded focus:ring-2 focus:ring-emerald-500 outline-none"
                                                     value={selectedFamily.location}
                                                     onChange={(e) => setSelectedFamily({ ...selectedFamily, location: e.target.value })}
                                                     required
@@ -454,7 +454,7 @@ export default function AreaPortal() {
                                             <div>
                                                 <label className="block text-sm font-medium text-gray-900 mb-1">Locality (Selection)</label>
                                                 <select
-                                                    className="w-full p-2 border rounded focus:ring-2 focus:ring-emerald-500 outline-none"
+                                                    className="w-full p-2 border text-gray-700 rounded focus:ring-2 focus:ring-emerald-500 outline-none"
                                                     value={selectedFamily.locality || ""}
                                                     onChange={(e) => setSelectedFamily({ ...selectedFamily, locality: e.target.value })}
                                                 >
@@ -496,7 +496,7 @@ export default function AreaPortal() {
                                                             <label className="block text-xs font-medium text-gray-900 mb-1">First Name</label>
                                                             <input
                                                                 type="text"
-                                                                className="w-full p-2 text-sm border rounded focus:ring-1 focus:ring-emerald-500 outline-none"
+                                                                className="w-full p-2 text-sm text-gray-700 border rounded focus:ring-1 focus:ring-emerald-500 outline-none"
                                                                 value={member.fullName || ""}
                                                                 onChange={(e) => handleMemberChange(index, 'fullName', e.target.value)}
                                                             />
@@ -505,7 +505,7 @@ export default function AreaPortal() {
                                                             <label className="block text-xs font-medium text-gray-900 mb-1">Surname</label>
                                                             <input
                                                                 type="text"
-                                                                className="w-full p-2 text-sm border rounded focus:ring-1 focus:ring-emerald-500 outline-none"
+                                                                className="w-full p-2 text-sm text-gray-700 border rounded focus:ring-1 focus:ring-emerald-500 outline-none"
                                                                 value={member.surname || ""}
                                                                 onChange={(e) => handleMemberChange(index, 'surname', e.target.value)}
                                                             />
@@ -514,7 +514,7 @@ export default function AreaPortal() {
                                                             <label className="block text-xs font-medium text-gray-900 mb-1">Date of Birth</label>
                                                             <input
                                                                 type="date"
-                                                                className="w-full p-2 text-sm border rounded focus:ring-1 focus:ring-emerald-500 outline-none"
+                                                                className="w-full p-2 text-sm text-gray-700 border rounded focus:ring-1 focus:ring-emerald-500 outline-none"
                                                                 value={member.dob || ""}
                                                                 onChange={(e) => handleMemberChange(index, 'dob', e.target.value)}
                                                             />
@@ -523,7 +523,7 @@ export default function AreaPortal() {
                                                             <label className="block text-xs font-medium text-gray-900 mb-1">Relation</label>
                                                             <input
                                                                 type="text"
-                                                                className="w-full p-2 text-sm border rounded focus:ring-1 focus:ring-emerald-500 outline-none"
+                                                                className="w-full p-2 text-sm text-gray-700 border rounded focus:ring-1 focus:ring-emerald-500 outline-none"
                                                                 value={member.relation || (member.isGuardian ? "Head" : "")}
                                                                 onChange={(e) => handleMemberChange(index, 'relation', e.target.value)}
                                                                 disabled={member.isGuardian}
@@ -537,7 +537,7 @@ export default function AreaPortal() {
                                                             <label className="block text-xs font-medium text-gray-900 mb-1">Phone</label>
                                                             <input
                                                                 type="text"
-                                                                className="w-full p-2 text-sm border rounded focus:ring-1 focus:ring-emerald-500 outline-none"
+                                                                className="w-full p-2 text-sm text-gray-700 border rounded focus:ring-1 focus:ring-emerald-500 outline-none"
                                                                 value={member.phone || ""}
                                                                 onChange={(e) => handleMemberChange(index, 'phone', e.target.value)}
                                                                 placeholder={!member.isGuardian ? "Optional" : ""}
@@ -548,7 +548,7 @@ export default function AreaPortal() {
                                                             <input
                                                                 type="text"
                                                                 maxLength={4}
-                                                                className="w-full p-2 text-sm border rounded focus:ring-1 focus:ring-emerald-500 outline-none"
+                                                                className="w-full p-2 text-sm text-gray-700 border rounded focus:ring-1 focus:ring-emerald-500 outline-none"
                                                                 value={member.aadhaar || ""}
                                                                 onChange={(e) => handleMemberChange(index, 'aadhaar', e.target.value)}
                                                             />
@@ -558,7 +558,7 @@ export default function AreaPortal() {
                                                                 <label className="block text-xs font-medium text-gray-900 mb-1">WhatsApp</label>
                                                                 <input
                                                                     type="text"
-                                                                    className="w-full p-2 text-sm border rounded focus:ring-1 focus:ring-emerald-500 outline-none"
+                                                                    className="w-full p-2 text-gray-700 text-sm border rounded focus:ring-1 focus:ring-emerald-500 outline-none"
                                                                     value={member.whatsapp || ""}
                                                                     onChange={(e) => handleMemberChange(index, 'whatsapp', e.target.value)}
                                                                 />
@@ -572,7 +572,7 @@ export default function AreaPortal() {
                                                             <label className="block text-xs font-medium text-gray-900 mb-1">Father's Name</label>
                                                             <input
                                                                 type="text"
-                                                                className="w-full p-1.5 text-sm border rounded focus:ring-1 focus:ring-emerald-500 outline-none bg-gray-50"
+                                                                className="w-full p-1.5 text-gray-700 text-sm border rounded focus:ring-1 focus:ring-emerald-500 outline-none bg-gray-50"
                                                                 value={member.fatherName || ""}
                                                                 onChange={(e) => handleMemberChange(index, 'fatherName', e.target.value)}
                                                             />
@@ -581,7 +581,7 @@ export default function AreaPortal() {
                                                             <label className="block text-xs font-medium text-gray-900 mb-1">Father's Surname</label>
                                                             <input
                                                                 type="text"
-                                                                className="w-full p-1.5 text-sm border rounded focus:ring-1 focus:ring-emerald-500 outline-none bg-gray-50"
+                                                                className="w-full p-1.5 text-gray-700 text-sm border rounded focus:ring-1 focus:ring-emerald-500 outline-none bg-gray-50"
                                                                 value={member.fatherSurname || ""}
                                                                 onChange={(e) => handleMemberChange(index, 'fatherSurname', e.target.value)}
                                                             />
@@ -590,7 +590,7 @@ export default function AreaPortal() {
                                                             <label className="block text-xs font-medium text-gray-900 mb-1">Mother's Name</label>
                                                             <input
                                                                 type="text"
-                                                                className="w-full p-1.5 text-sm border rounded focus:ring-1 focus:ring-emerald-500 outline-none bg-gray-50"
+                                                                className="w-full p-1.5 text-gray-700 text-sm border rounded focus:ring-1 focus:ring-emerald-500 outline-none bg-gray-50"
                                                                 value={member.motherName || ""}
                                                                 onChange={(e) => handleMemberChange(index, 'motherName', e.target.value)}
                                                             />
@@ -599,7 +599,7 @@ export default function AreaPortal() {
                                                             <label className="block text-xs font-medium text-gray-900 mb-1">Mother's Surname</label>
                                                             <input
                                                                 type="text"
-                                                                className="w-full p-1.5 text-sm border rounded focus:ring-1 focus:ring-emerald-500 outline-none bg-gray-50"
+                                                                className="w-full p-1.5 text-gray-700 text-sm border rounded focus:ring-1 focus:ring-emerald-500 outline-none bg-gray-50"
                                                                 value={member.motherSurname || ""}
                                                                 onChange={(e) => handleMemberChange(index, 'motherSurname', e.target.value)}
                                                             />
@@ -624,7 +624,7 @@ export default function AreaPortal() {
                                                                     <label className="block text-xs font-medium text-gray-900 mb-1">Spouse Name</label>
                                                                     <input
                                                                         type="text"
-                                                                        className="w-full p-2 text-sm border rounded"
+                                                                        className="w-full p-2 text-gray-700 text-sm border rounded"
                                                                         value={member.spouseName || ""}
                                                                         onChange={(e) => handleMemberChange(index, 'spouseName', e.target.value)}
                                                                     />
@@ -633,7 +633,7 @@ export default function AreaPortal() {
                                                                     <label className="block text-xs font-medium text-gray-900 mb-1">Spouse Surname</label>
                                                                     <input
                                                                         type="text"
-                                                                        className="w-full p-2 text-sm border rounded"
+                                                                        className="w-full p-2 text-gray-700 text-sm border rounded"
                                                                         value={member.spouseSurname || ""}
                                                                         onChange={(e) => handleMemberChange(index, 'spouseSurname', e.target.value)}
                                                                     />
@@ -645,7 +645,7 @@ export default function AreaPortal() {
                                                                 <label className="block text-xs font-medium text-gray-900 mb-1">Grandfather Name</label>
                                                                 <input
                                                                     type="text"
-                                                                    className="w-full p-2 text-sm border rounded focus:ring-1 focus:ring-emerald-500 outline-none"
+                                                                    className="w-full p-2 text-gray-700 text-sm border rounded focus:ring-1 focus:ring-emerald-500 outline-none"
                                                                     value={member.grandFatherName || ""}
                                                                     onChange={(e) => handleMemberChange(index, 'grandFatherName', e.target.value)}
                                                                 />
