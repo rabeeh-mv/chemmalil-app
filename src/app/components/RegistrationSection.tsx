@@ -106,7 +106,14 @@ export default function RegistrationSection() {
   const [modalSpouseMotherSurname, setModalSpouseMotherSurname] = useState("");
 
   const updateGuardian = (field: keyof GuardianDetails, value: string) => {
-    setGuardian((prev) => ({ ...prev, [field]: value }));
+    setGuardian((prev) => {
+      const updated = { ...prev, [field]: value };
+      // Auto-fill Father's surname when Guardian's surname is entered
+      if (field === "surname") {
+        updated.fatherSurname = value;
+      }
+      return updated;
+    });
   };
 
   const openMemberModal = () => {
@@ -120,7 +127,7 @@ export default function RegistrationSection() {
     setModalMotherSurname(guardian.wifeSurname);
 
     setModalFullName("");
-    setModalSurname("");
+    setModalSurname(guardian.surname); // Auto-fill child's surname with guardian's surname
     setModalDob("");
     setModalIsMarried(false);
     setModalSpouseName("");
@@ -188,7 +195,7 @@ export default function RegistrationSection() {
       setModalMotherSurname("");
     } else if (relation === "Child") {
       setModalFullName("");
-      setModalSurname("");
+      setModalSurname(guardian.surname); // Auto-fill child's surname with guardian's surname
       setModalFatherName(guardian.fullName);
       setModalFatherSurname(guardian.surname);
       setModalMotherName(guardian.wifeName);
