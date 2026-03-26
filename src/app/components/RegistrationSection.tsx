@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { db, storage } from "@/app/lib/firebase";
-import { collection, addDoc } from "firebase/firestore";
+import { collection, addDoc, getDocs, query } from "firebase/firestore";
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import { Home, Users, User, X, CheckCircle, Edit, Check, Upload, Image as ImageIcon } from "lucide-react";
 import { ToastContainer, toast } from "react-toastify";
@@ -52,12 +52,33 @@ export default function RegistrationSection() {
   // Step 1 - House Details
   const [houseName, setHouseName] = useState("");
   const [familyName, setFamilyName] = useState("");
+  const [oldMahallCode, setOldMahallCode] = useState("");
   const [location, setLocation] = useState(""); // This is typically "Landmark" or specific spot
   const [locality, setLocality] = useState(""); // This is the "Area" (Ramanatukara, etc.)
   const [roadName, setRoadName] = useState("");
   const [address, setAddress] = useState("");
+  const [areasList, setAreasList] = useState<any[]>([]);
 
-  const AREAS = ["Ramanatukara", "Pullumkunn", "Idimuyikkal", "Other"];
+  // --- Fetch Areas for Dropdown ---
+  useEffect(() => {
+    const fetchAreas = async () => {
+      try {
+        const q = query(collection(db, "area_accounts"));
+        const querySnapshot = await getDocs(q);
+        const areas: any[] = querySnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        // Sort by name
+        areas.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+        setAreasList(areas);
+      } catch (error) {
+        console.error("Error fetching areas:", error);
+      }
+    };
+    fetchAreas();
+  }, []);
+
 
 
   // Step 2 - Guardian Details
@@ -252,7 +273,7 @@ export default function RegistrationSection() {
         isMarried: true,
         spouseName: modalFullName,
         spouseSurname: modalSurname,
-        relation: "Other", // Or In-law
+        relation: modalRelation === "Child" ? "Child's Spouse" : "Sibling's Spouse", 
       };
       membersToAdd.push(spouseMember);
     }
@@ -376,6 +397,40 @@ export default function RegistrationSection() {
     return true;
   };
 
+  const handleContinueToStep3 = () => {
+    if (!validateStep2()) return;
+    
+    // Auto-add wife as a member if she isn't already in the list
+    if (guardian.wifeName && guardian.wifeSurname) {
+      setMembers(prev => {
+        const wifeExists = prev.some(m => 
+          (m.relation === "Partner" || m.relation === "Wife") && 
+          m.fullName === guardian.wifeName && 
+          m.surname === guardian.wifeSurname
+        );
+        if (!wifeExists) {
+          const newWife: Member = {
+            fullName: guardian.wifeName,
+            surname: guardian.wifeSurname,
+            fatherName: "",
+            fatherSurname: "",
+            motherName: "",
+            motherSurname: "",
+            dob: "",
+            isMarried: true,
+            spouseName: guardian.fullName,
+            spouseSurname: guardian.surname,
+            relation: "Partner",
+          };
+          return [...prev, newWife];
+        }
+        return prev;
+      });
+    }
+    
+    setStep(3);
+  };
+
   const handleSubmit = async () => {
     setLoading(true);
     try {
@@ -415,18 +470,29 @@ export default function RegistrationSection() {
       }));
 
       const allMembers = [guardianMember, ...regularMembers];
+      
+      const lowercasedMembers = allMembers.map(m => {
+        const newM: any = { ...m };
+        for (const key of Object.keys(newM)) {
+          if (key !== 'photoURL' && typeof newM[key] === 'string') {
+            newM[key] = newM[key].toLowerCase();
+          }
+        }
+        return newM;
+      });
 
       const data = {
-        houseName,
-        familyName,
-        location,
-        locality, // Area
-        area: locality, // Alias for easier querying
+        houseName: houseName.toLowerCase(),
+        familyName: familyName.toLowerCase(),
+        oldMahallCode: oldMahallCode.toLowerCase(),
+        location: location.toLowerCase(),
+        locality: locality.toLowerCase(), // Area
+        area: locality.toLowerCase(), // Alias for easier querying
         areaVerified: false, // Default verification status
-        roadName,
-        address,
+        roadName: roadName.toLowerCase(),
+        address: address.toLowerCase(),
         // Guardian is now part of members array
-        members: allMembers,
+        members: lowercasedMembers,
         totalMembers: allMembers.length,
         createdAt: new Date().toISOString(),
         registrationDate: new Date().toLocaleDateString(),
@@ -487,6 +553,11 @@ export default function RegistrationSection() {
                     value={familyName} onChange={(e) => setFamilyName(e.target.value)} placeholder="e.g., Vakatte poonattil" />
                 </div>
                 <div>
+                  <label className="block text-sm font-medium text-gray-700">Old Mahall Code</label>
+                  <input type="text" className="w-full text-gray-900 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+                    value={oldMahallCode} onChange={(e) => setOldMahallCode(e.target.value)} placeholder="e.g., OM-123" />
+                </div>
+                <div>
                   <label className="block text-sm font-medium text-gray-700">Location *</label>
                   <input type="text" className="w-full text-gray-900 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
                     value={location} onChange={(e) => setLocation(e.target.value)} />
@@ -499,9 +570,12 @@ export default function RegistrationSection() {
                     onChange={(e) => setLocality(e.target.value)}
                   >
                     <option value="">Select Area</option>
-                    {AREAS.map((area) => (
-                      <option key={area} value={area}>{area}</option>
+                    {areasList.map((area) => (
+                      <option key={area.id} value={area.name}>
+                        {area.name}
+                      </option>
                     ))}
+                    {areasList.length === 0 && <option value="Other">Other</option>}
                   </select>
                 </div>
                 <div>
@@ -625,7 +699,7 @@ export default function RegistrationSection() {
 
               <div className="flex gap-4 pt-4">
                 <button onClick={() => setStep(1)} className="flex-1 py-3 border rounded-lg hover:bg-gray-50 text-gray-800 transition">Back</button>
-                <button onClick={() => validateStep2() && setStep(3)} className="flex-1 bg-emerald-600 text-white py-3 rounded-lg hover:bg-emerald-700 transition">Continue</button>
+                <button onClick={handleContinueToStep3} className="flex-1 bg-emerald-600 text-white py-3 rounded-lg hover:bg-emerald-700 transition">Continue</button>
               </div>
             </div>
           )}
@@ -686,6 +760,7 @@ export default function RegistrationSection() {
                 <div className="grid grid-cols-2 text-gray-800 gap-x-4 gap-y-2 text-md">
                   <p><span className="text-gray-700 text-sm block">House Name</span>{houseName}</p>
                   <p><span className="text-gray-700 text-sm block">Family Name</span>{familyName}</p>
+                  <p><span className="text-gray-700 text-sm block">Old Mahall Code</span>{oldMahallCode || "N/A"}</p>
                   <p><span className="text-gray-700 text-sm block">Area</span>{locality}</p>
                   <p className="col-span-2"><span className="text-gray-700 text-sm block">Address</span>{address}, {roadName}, {location}</p>
                 </div>

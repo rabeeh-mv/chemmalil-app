@@ -14,6 +14,27 @@ export default function AreaPortal() {
     const [loading, setLoading] = useState(false);
     const [pendingFamilies, setPendingFamilies] = useState<any[]>([]);
     const [currentArea, setCurrentArea] = useState<any>(null);
+    const [areasList, setAreasList] = useState<any[]>([]);
+
+    // --- Fetch Areas for Dropdown ---
+    useEffect(() => {
+        const fetchAreas = async () => {
+            try {
+                const q = query(collection(db, "area_accounts"));
+                const querySnapshot = await getDocs(q);
+                const areas = querySnapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                }));
+                // Sort by name
+                areas.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+                setAreasList(areas);
+            } catch (error) {
+                console.error("Error fetching areas:", error);
+            }
+        };
+        fetchAreas();
+    }, []);
 
     // --- Login Logic ---
     const handleLogin = async (e: React.FormEvent) => {
@@ -22,8 +43,8 @@ export default function AreaPortal() {
 
         try {
             // Query 'area_accounts' collection
-            // Schema expected: { area: "Ramanatukara", password: "...", headPersonName: "..." }
-            const q = query(collection(db, "area_accounts"), where("area", "==", areaName));
+            // Schema: { name: "Ramanatukara", password: "...", headPerson: "..." }
+            const q = query(collection(db, "area_accounts"), where("name", "==", areaName));
             const querySnapshot = await getDocs(q);
 
             if (querySnapshot.empty) {
@@ -43,8 +64,8 @@ export default function AreaPortal() {
 
             setCurrentArea(accountData);
             setIsLoggedIn(true);
-            toast.success(`Welcome, ${accountData.headPersonName || "Area Controller"}`);
-            fetchPendingData(accountData.area);
+            toast.success(`Welcome, ${accountData.headPerson || "Area Controller"}`);
+            fetchPendingData(accountData.name);
 
         } catch (error) {
             console.error("Login Error:", error);
@@ -61,7 +82,7 @@ export default function AreaPortal() {
             // Fetch families in this area that are NOT verified
             const q = query(
                 collection(db, "families"),
-                where("area", "==", area),
+                where("area", "in", [area, area.toLowerCase()]),
                 where("areaVerified", "==", false)
             );
 
@@ -89,7 +110,7 @@ export default function AreaPortal() {
             await updateDoc(familyRef, {
                 areaVerified: true,
                 verifiedAt: new Date().toISOString(),
-                verifiedBy: currentArea.headPersonName
+                verifiedBy: currentArea.headPerson || "Area Controller"
             });
 
             toast.success("Family verified successfully");
@@ -184,10 +205,11 @@ export default function AreaPortal() {
                                 required
                             >
                                 <option value="">Select Area</option>
-                                <option value="Ramanatukara">Ramanatukara</option>
-                                <option value="Pullumkunn">Pullumkunn</option>
-                                <option value="Idimuyikkal">Idimuyikkal</option>
-                                <option value="Other">Other</option>
+                                {areasList.map((a) => (
+                                    <option key={a.id} value={a.name}>
+                                        {a.name}
+                                    </option>
+                                ))}
                             </select>
                         </div>
 
@@ -223,10 +245,10 @@ export default function AreaPortal() {
             <nav className="bg-white shadow-sm px-6 py-4 flex justify-between items-center sticky top-0 z-10">
                 <div className="flex items-center space-x-2">
                     <MapPin className="w-6 h-6 text-emerald-600" />
-                    <span className="font-bold text-lg text-gray-900">{currentArea?.area} Area</span>
+                    <span className="font-bold text-lg text-gray-900">{currentArea?.name} Area</span>
                 </div>
                 <div className="flex items-center space-x-4">
-                    <span className="text-sm text-gray-500 hidden sm:block">Controller: {currentArea?.headPersonName}</span>
+                    <span className="text-sm text-gray-500 hidden sm:block">Controller: {currentArea?.headPerson}</span>
                     <button
                         onClick={() => setIsLoggedIn(false)}
                         className="text-red-600 hover:bg-red-50 px-3 py-1 rounded text-sm font-medium"
@@ -240,7 +262,7 @@ export default function AreaPortal() {
                 <div className="flex justify-between items-center mb-6">
                     <h2 className="text-2xl font-bold text-gray-900">Pending Verifications</h2>
                     <button
-                        onClick={() => fetchPendingData(currentArea.area)}
+                        onClick={() => fetchPendingData(currentArea.name)}
                         className="text-emerald-600 hover:text-emerald-700 font-medium"
                     >
                         Refresh List
@@ -254,7 +276,7 @@ export default function AreaPortal() {
                 ) : pendingFamilies.length === 0 ? (
                     <div className="text-center py-12 bg-white rounded-xl shadow-sm">
                         <CheckCircle className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                        <p className="text-gray-500 text-lg">No pending verifications for {currentArea.area}</p>
+                        <p className="text-gray-500 text-lg">No pending verifications for {currentArea.name}</p>
                     </div>
                 ) : (
                     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -459,10 +481,11 @@ export default function AreaPortal() {
                                                     onChange={(e) => setSelectedFamily({ ...selectedFamily, locality: e.target.value })}
                                                 >
                                                     <option value="">Select Locality</option>
-                                                    <option value="Ramanatukara">Ramanatukara</option>
-                                                    <option value="Pullumkunn">Pullumkunn</option>
-                                                    <option value="Idimuyikkal">Idimuyikkal</option>
-                                                    <option value="Other">Other</option>
+                                                    {areasList.map((a) => (
+                                                        <option key={a.id} value={a.name}>
+                                                            {a.name}
+                                                        </option>
+                                                    ))}
                                                 </select>
                                             </div>
                                             <div className="md:col-span-2">
